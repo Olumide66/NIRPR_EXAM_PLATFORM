@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="icon" type="image/jpeg" href="/static/images/nnra-logo.jpg">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Candidate Portal - NIRPR RSO Examination Platform</title>
+<link rel="stylesheet" href="/static/css/style.css" />
+<link rel="stylesheet" href="/static/css/candidate.css" />
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="crest"><img src="/static/images/nnra-logo.jpg" alt="NNRA logo"></div>
+    <div>
+      NIRPR RSO Examination Portal
+      <div class="brand-sub">Candidate Portal</div>
+    </div>
+  </div>
+  <nav id="tabs" class="candidate-nav" aria-label="Candidate dashboard sections">
+    <button class="active" data-tab="exams">Exams</button><button data-tab="results">Results</button><button data-tab="certificates">Certificates</button><button data-tab="payments">Payments</button><button data-tab="notifications">Notifications <span id="notificationBadge" class="notification-count hidden">0</span></button><button data-tab="settings">Settings</button>
+  </nav>
+  <div class="user-chip">
+    <span id="userName"></span>
+    <button class="btn small secondary" id="logoutBtn">Log out</button>
+  </div>
+</div>
+
+<div class="alert warn hidden" id="impersonationBanner" style="margin:0; border-radius:0; text-align:center; font-weight:700;">
+  You're viewing the platform as this candidate (admin impersonation). Exam-taking actions are disabled.
+  <button class="btn small" id="switchBackBtn" style="margin-left:12px;">Switch back to admin</button>
+</div>
+
+<!-- DASHBOARD -->
+<div class="container" id="dashboardView">
+  <div id="alertBox"></div>
+  <header class="dashboard-heading">
+    <h1>Candidate dashboard</h1>
+    <p>Manage your examination schedule, active assessments, and results in one place.</p>
+  </header>
+  <div class="candidate-identity hidden" id="candidateIdentity" aria-label="Your candidate identification">
+    <span class="candidate-identity-label">Candidate ID</span>
+    <strong id="candidateNumber"></strong>
+  </div>
+
+  <div id="resumeBanner" class="card hidden" style="border-left:4px solid var(--nirpr-gold); margin-bottom:18px;">
+    <div class="row between">
+      <div>
+        <div style="font-weight:700;">You have an exam in progress</div>
+        <div class="muted" style="font-size:13px;" id="resumeText"></div>
+      </div>
+      <button class="btn" id="resumeBtn">Resume exam</button>
+    </div>
+  </div>
+
+  <div id="examsPane">
+    <section class="organization-card" aria-labelledby="aboutNirprTitle">
+      <div class="organization-mark">NIRPR</div>
+      <div>
+        <div class="eyebrow">Certification provider</div>
+        <h2 id="aboutNirprTitle">National Institute of Radiation Protection and Research</h2>
+        <p>NIRPR, based at the University of Ibadan in Ibadan, Nigeria, is the Technical Support Organization of the Nigerian Nuclear Regulatory Authority (NNRA). It supports radiation protection and nuclear safety through training, research, technical services, and the maintenance of national radiation standards.</p>
+        <a href="https://nnra.gov.ng/nnra/page-Technical_Support_Organization" target="_blank" rel="noopener">Read the official NNRA profile</a>
+      </div>
+    </section>
+    <div class="card">
+      <h2 class="mt-0">Your certification exams</h2>
+      <p class="subtitle" id="programLine"></p>
+      <div id="examsList"><p class="muted">Loading...</p></div>
+    </div>
+  </div>
+
+  <div id="resultsPane" class="hidden">
+    <div class="card">
+      <h2 class="mt-0">My results</h2>
+      <p class="subtitle">Results are released only after NIRPR review and approval.</p>
+      <div id="resultsList"><p class="muted">Loading...</p></div>
+      <div class="appeal-form-card" id="appealFormCard">
+        <h3>Request an exam rewrite</h3><p class="muted">Submit an appeal for a released result. An administrator must approve it before you can rewrite the exam. Only one appeal may be submitted for each result.</p>
+        <form id="appealForm"><label for="appealAttempt">Result to appeal</label><select id="appealAttempt" required><option value="">Select a released result</option></select><label for="appealReason">Reason for requesting a rewrite</label><textarea id="appealReason" required minlength="20" maxlength="5000" rows="6" placeholder="Explain why you are requesting another attempt…"></textarea><div class="row between"><small class="muted" id="appealCharacterCount">0 / 5000 characters (minimum 20)</small></div><button class="btn" type="submit" id="appealSubmitBtn">Submit rewrite appeal</button></form><div id="appealHistory" style="margin-top:18px"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="certificatesPane" class="hidden">
+    <div class="card">
+      <h2 class="mt-0">My certificates</h2>
+      <p class="subtitle">Certificates are generated automatically after NIRPR approves and releases a passing result.</p>
+      <div id="certificatesList"><p class="muted">Loading...</p></div>
+    </div>
+  </div>
+  <div id="paymentsPane" class="hidden"><div class="card"><h2 class="mt-0">Payment receipts</h2><p class="subtitle">Upload a PDF, PNG or JPEG receipt for approval before a payment-gated exam.</p><div id="paymentsList"></div></div></div>
+  <div id="notificationsPane" class="hidden"><div class="card"><div class="row between"><h2 class="mt-0">Notifications &amp; reminders</h2><button class="btn small secondary" id="markNotificationsRead" type="button">Mark all as read</button></div><div id="notificationsList"></div></div></div>
+  <div id="settingsPane" class="hidden">
+    <div class="card">
+      <h2 class="mt-0">Display settings</h2><p class="subtitle">Customize how your candidate portal appears on this device.</p>
+      <div class="grid cols-2">
+        <div><label for="themeSelect">Appearance</label><select id="themeSelect"><option value="light">Light mode</option><option value="dark">Dark mode</option></select></div>
+        <div><label for="colorSelect">Accent color</label><select id="colorSelect"><option value="green">NIRPR green</option><option value="blue">Blue</option><option value="purple">Purple</option><option value="teal">Teal</option></select></div>
+      </div>
+      <label>Candidate portal text and interface size</label><p class="muted">Use these controls to make dashboard text, exam questions, navigation, forms and buttons smaller or larger on this device.</p><div class="row"><button class="btn secondary" id="fontDown" type="button">A− Make everything smaller</button><button class="btn secondary" id="fontReset" type="button">Reset to standard size</button><button class="btn secondary" id="fontUp" type="button">A+ Make everything larger</button><span class="muted" id="fontScaleLabel"></span></div>
+      <div class="alert info" style="margin-top:18px">Your display preferences are saved automatically in this browser.</div>
+    </div>
+    <div class="card"><h2>Logged-in devices and sessions</h2><p class="subtitle">The address <strong>127.0.0.1</strong> means this computer because the platform is running locally. Review active sessions below and revoke any login you do not recognize.</p><div id="sessionsList"><p class="muted">Loading sessions…</p></div></div>
+  </div>
+</div>
+
+<!-- INSTRUCTIONS MODAL -->
+<div class="modal-backdrop hidden" id="instructionsModal">
+  <div class="modal">
+    <h2 class="mt-0" id="instrTitle">Exam Instructions</h2>
+    <div id="instrBody" style="font-size:13.5px; color:var(--text-mute); margin-bottom:16px;"></div>
+    <div class="alert warn">
+      Once you start, the timer cannot be paused and runs on our server &mdash; closing the tab or
+      losing connection will NOT stop it. Do not switch tabs or exit full-screen mode; this platform
+      records such activity. Ensure you have a stable internet connection before proceeding.
+    </div>
+    <div class="row" style="margin-top:16px">
+      <button class="btn secondary block" id="cancelStartBtn">Cancel</button>
+      <button class="btn block" id="confirmStartBtn">Begin Exam</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXAM TAKING VIEW -->
+<div class="container hidden" id="examView">
+  <div class="exam-topbar">
+    <div>
+      <div class="exam-kicker">NIRPR assessment session</div>
+      <h1 class="mt-0 mb-0" id="examTitleHeader"></h1>
+      <p class="muted" id="examProgress"></p>
+    </div>
+    <div class="exam-timer" id="examTimer">--:--</div>
+  </div>
+
+  <div class="grid" style="grid-template-columns: minmax(0, 1fr) 280px; align-items:start;">
+    <main class="exam-main-card">
+      <div id="questionBody">Loading question...</div>
+      <div class="row between" style="margin-top:28px;">
+        <button class="btn secondary" id="prevBtn" type="button">&larr; Previous</button>
+        <button class="btn secondary" id="nextBtn" type="button">Next &rarr;</button>
+      </div>
+    </main>
+
+    <aside class="exam-sidebar">
+      <div class="sidebar-label">Your progress</div>
+      <div class="exam-completion" id="examCompletion">
+        <strong id="examCompletionPercent">0%</strong>
+        <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div class="progress-value" id="examCompletionBar" style="--progress:0%"></div>
+        </div>
+        <div class="muted" id="examCompletionText" style="font-size:12px; margin-top:7px;">0 answered</div>
+      </div>
+
+      <div class="sidebar-label">Question navigator</div>
+      <div class="q-nav-grid" id="qNavGrid"></div>
+      <p class="muted" style="font-size:12px; margin-top:10px;">
+        <span style="color:var(--nirpr-green-dark)">&#9632;</span> Answered &nbsp;
+        <span style="color:var(--text-mute)">&#9633;</span> Not answered
+      </p>
+      <div class="exam-save-note">Answers save automatically</div>
+      <button class="btn secondary block" style="margin-top:10px;" id="toggleCalcBtn" type="button">&#128290; Calculator</button>
+      <button class="btn danger block" style="margin-top:10px;" id="submitExamBtn" type="button">Submit exam</button>
+    </aside>
+  </div>
+</div>
+
+<!-- CALCULATOR -->
+<div class="calculator-panel sci-calc hidden" id="calculatorPanel">
+  <div class="calculator-header">
+    <span>Scientific Calculator</span>
+    <button type="button" id="closeCalcBtn" aria-label="Close calculator">&times;</button>
+  </div>
+  <div class="calculator-display" id="calcDisplay">0</div>
+  <div class="calculator-grid sci-grid">
+    <button type="button" class="calc-btn calc-fn" id="angleModeBtn" data-action="toggleAngle">DEG</button>
+    <button type="button" class="calc-btn calc-fn" data-append="(">(</button>
+    <button type="button" class="calc-btn calc-fn" data-append=")">)</button>
+    <button type="button" class="calc-btn calc-fn" data-action="clear">C</button>
+    <button type="button" class="calc-btn calc-fn" data-action="backspace">&#9003;</button>
+
+    <button type="button" class="calc-btn" data-append="sin(">sin</button>
+    <button type="button" class="calc-btn" data-append="cos(">cos</button>
+    <button type="button" class="calc-btn" data-append="tan(">tan</button>
+    <button type="button" class="calc-btn" data-append="pi">&pi;</button>
+    <button type="button" class="calc-btn calc-op" data-append="/">&divide;</button>
+
+    <button type="button" class="calc-btn" data-append="log(">log</button>
+    <button type="button" class="calc-btn" data-append="antilog(">10<sup>x</sup></button>
+    <button type="button" class="calc-btn" data-append="ln(">ln</button>
+    <button type="button" class="calc-btn" data-append="exp(">e<sup>x</sup></button>
+    <button type="button" class="calc-btn" data-append="sqrt(">&#8730;</button>
+    <button type="button" class="calc-btn" data-action="square">x&sup2;</button>
+    <button type="button" class="calc-btn calc-op" data-append="*">&times;</button>
+
+    <button type="button" class="calc-btn" data-append="7">7</button>
+    <button type="button" class="calc-btn" data-append="8">8</button>
+    <button type="button" class="calc-btn" data-append="9">9</button>
+    <button type="button" class="calc-btn" data-append="^">x^y</button>
+    <button type="button" class="calc-btn calc-op" data-append="-">&minus;</button>
+
+    <button type="button" class="calc-btn" data-append="4">4</button>
+    <button type="button" class="calc-btn" data-append="5">5</button>
+    <button type="button" class="calc-btn" data-append="6">6</button>
+    <button type="button" class="calc-btn" data-action="inverse">1/x</button>
+    <button type="button" class="calc-btn calc-op" data-append="+">+</button>
+
+    <button type="button" class="calc-btn" data-append="1">1</button>
+    <button type="button" class="calc-btn" data-append="2">2</button>
+    <button type="button" class="calc-btn" data-append="3">3</button>
+    <button type="button" class="calc-btn" data-append="e">e</button>
+    <button type="button" class="calc-btn calc-fn" data-append="%">%</button>
+
+    <button type="button" class="calc-btn" data-append="0" style="grid-column: span 2;">0</button>
+    <button type="button" class="calc-btn" data-append=".">.</button>
+    <button type="button" class="calc-btn calc-fn" data-action="negate">+/&minus;</button>
+    <button type="button" class="calc-btn calc-eq" data-action="evaluate">=</button>
+  </div>
+</div>
+
+<!-- SUBMITTED VIEW -->
+<div class="container narrow hidden" id="submittedView">
+  <div class="card" style="text-align:center;">
+    <h1>Exam submitted</h1>
+    <p class="subtitle" id="submittedMessage"></p>
+    <button class="btn" id="backToDashboardBtn">Back to dashboard</button>
+  </div>
+</div>
+
+<script>
+const API = "/api";
+const token = localStorage.getItem("nirpr_token");
+const role = localStorage.getItem("nirpr_role");
+let isImpersonating = false;
+if (!token || role !== "candidate") window.location.href = "/";
+
+function authHeaders(extra) {
+  return Object.assign({ "Authorization": `Bearer ${token}` }, extra || {});
+}
+
+function showAlert(msg, type) {
+  document.getElementById("alertBox").innerHTML = `<div class="alert ${type}">${msg}</div>`;
+}
+
+document.getElementById("logoutBtn").addEventListener("click", () => {
+  localStorage.clear();
+  window.location.href = "/";
+});
+
+document.getElementById("switchBackBtn").addEventListener("click", () => {
+  const adminToken = localStorage.getItem("nirpr_admin_token");
+  const adminRole = localStorage.getItem("nirpr_admin_role");
+  localStorage.removeItem("nirpr_admin_token");
+  localStorage.removeItem("nirpr_admin_role");
+  if (adminToken) {
+    localStorage.setItem("nirpr_token", adminToken);
+    localStorage.setItem("nirpr_role", adminRole);
+    window.location.href = "/admin";
+  } else {
+    window.location.href = "/";
+  }
+});
+
+// ---- Tabs ----
+document.querySelectorAll("#tabs button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("#tabs button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("examsPane").classList.toggle("hidden", btn.dataset.tab !== "exams");
+    document.getElementById("resultsPane").classList.toggle("hidden", btn.dataset.tab !== "results");
+    document.getElementById("certificatesPane").classList.toggle("hidden", btn.dataset.tab !== "certificates");
+    document.getElementById("paymentsPane").classList.toggle("hidden", btn.dataset.tab !== "payments");
+    document.getElementById("notificationsPane").classList.toggle("hidden", btn.dataset.tab !== "notifications");
+    document.getElementById("settingsPane").classList.toggle("hidden", btn.dataset.tab !== "settings");
+    if (btn.dataset.tab === "exams") loadExams();
+    if (btn.dataset.tab === "results") loadResults();
+    if (btn.dataset.tab === "certificates") loadCertificates();
+    if (btn.dataset.tab === "payments") loadPayments();
+    if (btn.dataset.tab === "notifications") openNotifications();
+    if (btn.dataset.tab === "settings") loadSessions();
+  });
+});
+
+async function loadPayments() {
+  const [paymentsRes, examsRes] = await Promise.all([fetch(`${API}/candidate/payments`, {headers:authHeaders()}), fetch(`${API}/exams`, {headers:authHeaders()})]);
+  const payments = await paymentsRes.json(), exams = await examsRes.json();
+  document.getElementById("paymentsList").innerHTML = `<form id="receiptForm" class="row" enctype="multipart/form-data">
+    <select id="receiptExam" required>${exams.map(e=>`<option value="${e.id}">${escapeHtml(e.title)}</option>`).join("")}</select>
+    <input id="receiptReference" placeholder="Payment reference" required><input id="receiptFile" type="file" accept=".pdf,.png,.jpg,.jpeg" required>
+    <button class="btn" type="submit">Upload receipt</button></form>` + (payments.length ? `<table><thead><tr><th>Exam</th><th>Reference</th><th>Status</th><th>Uploaded</th></tr></thead><tbody>${payments.map(p=>`<tr><td>${escapeHtml(p.exam)}</td><td>${escapeHtml(p.reference||'—')}</td><td><span class="badge ${p.status==='approved'?'green':p.status==='rejected'?'red':'gold'}">${p.status}</span></td><td>${new Date(p.uploaded_at).toLocaleString()}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">No receipts uploaded.</p>');
+  document.getElementById("receiptForm").onsubmit = async e => { e.preventDefault(); const fd=new FormData(); fd.append('file',document.getElementById('receiptFile').files[0]); fd.append('reference',document.getElementById('receiptReference').value); const res=await fetch(`${API}/candidate/payments/${document.getElementById('receiptExam').value}`,{method:'POST',headers:{Authorization:`Bearer ${token}`},body:fd}); const data=await res.json(); showAlert(data.detail,res.ok?'success':'error'); if(res.ok)loadPayments(); };
+}
+
+async function loadNotifications() {
+  const res=await fetch(`${API}/notifications`,{headers:authHeaders()}), items=await res.json();
+  document.getElementById('notificationsList').innerHTML=items.length?items.map(n=>`<div class="notification-item ${n.read_at?'':'unread'}"><div class="row between"><strong>${escapeHtml(n.title)}</strong>${n.read_at?'':'<span class="badge blue">New</span>'}</div><p>${escapeHtml(n.message)}</p><span class="muted">${new Date(n.created_at).toLocaleString()}</span></div>`).join(''):'<p class="muted">No notifications.</p>';
+}
+async function loadUnreadCount(){const res=await fetch(`${API}/notifications/unread-count`,{headers:authHeaders()});if(!res.ok)return;const count=(await res.json()).unread_count||0,badge=document.getElementById('notificationBadge');badge.textContent=count>99?'99+':String(count);badge.classList.toggle('hidden',count===0);}
+async function openNotifications(){
+  const badge=document.getElementById('notificationBadge');
+  badge.textContent='0';
+  badge.classList.add('hidden');
+  const res=await fetch(`${API}/notifications/mark-all-read`,{method:'POST',headers:authHeaders()});
+  await loadNotifications();
+  if(!res.ok)loadUnreadCount();
+}
+document.getElementById('markNotificationsRead').onclick=async()=>{const res=await fetch(`${API}/notifications/mark-all-read`,{method:'POST',headers:authHeaders()});if(res.ok){loadNotifications();loadUnreadCount();}};
+
+async function loadSessions(){const res=await fetch(`${API}/auth/sessions`,{headers:authHeaders()}),items=await res.json(),list=document.getElementById('sessionsList');if(!res.ok){list.innerHTML='<div class="alert error">Could not load your sessions.</div>';return;}list.innerHTML=items.length?`<table><thead><tr><th>Device</th><th>Network address</th><th>Last active</th><th>Status</th><th></th></tr></thead><tbody>${items.map(s=>`<tr><td>${escapeHtml(s.device||'Unknown browser')}</td><td>${escapeHtml(s.ip_address==='127.0.0.1'?'This computer (127.0.0.1)':s.ip_address||'Unknown')}</td><td>${new Date(s.last_seen_at).toLocaleString()}</td><td>${s.revoked?'<span class="badge gray">Revoked</span>':'<span class="badge green">Active</span>'}</td><td>${s.revoked?'':`<button class="btn small danger" onclick="revokeSession('${s.id}')">Revoke</button>`}</td></tr>`).join('')}</tbody></table>`:'<p class="muted">No sessions found.</p>';}
+window.revokeSession=async id=>{if(!confirm('Revoke this login session? That device will need to sign in again.'))return;const res=await fetch(`${API}/auth/sessions/${id}`,{method:'DELETE',headers:authHeaders()});if(res.ok)loadSessions();else showAlert('Could not revoke the session.','error');};
+
+const STATUS_BADGE = {
+  scheduled: '<span class="badge blue">Scheduled</span>',
+  active: '<span class="badge green">Active Now</span>',
+  completed: '<span class="badge gray">Completed</span>',
+};
+
+function statusBadge(status, exam = null) {
+    if (status === "active") {
+      return `<span class="status-badge active">Active now</span>`;
+    }
+    if (status === "scheduled") {
+      return `<span class="status-badge scheduled">Scheduled</span>`;
+    }
+    if (status === "completed") {
+      return `<span class="status-badge completed">Completed</span>`;
+    }
+    return `<span class="status-badge completed">${status || "Unknown"}</span>`;
+  }
+
+function examCardProgress(exam) {
+  // For a dashboard card, show meaningful progress only when the API exposes
+  // an attempt. Otherwise, show availability rather than inventing a value.
+  if (!exam || !exam.attempt) return "";
+  const total = Number(exam.attempt.total_questions || exam.questions_per_exam || 0);
+  const answered = Number(exam.attempt.answered_questions || 0);
+  const percent = total ? Math.min(100, Math.round(answered / total * 100)) : 0;
+  return `
+    <div class="exam-progress">
+      <div class="exam-progress-line">
+        <span>${answered} of ${total} questions answered</span>
+        <strong>${percent}%</strong>
+      </div>
+      <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}">
+        <div class="progress-value" style="--progress:${percent}%"></div>
+      </div>
+    </div>
+  `;
+}
+
+async function init() {
+  try {
+    const res = await fetch(`${API}/auth/me`, { headers: authHeaders() });
+    if (!res.ok) throw new Error();
+    const me = await res.json();
+    document.getElementById("userName").textContent = me.full_name;
+    if (me.candidate_number) {
+      document.getElementById("candidateNumber").textContent = me.candidate_number;
+      document.getElementById("candidateIdentity").classList.remove("hidden");
+    }
+    if (me.candidate_profile) {
+      document.getElementById("programLine").textContent =
+        `Registered candidate ${me.candidate_profile.accreditation_status === 'pending' ? '(accreditation pending review)' : ''}`;
+    }
+    isImpersonating = !!me.is_impersonated;
+    if (isImpersonating) {
+      document.getElementById("impersonationBanner").classList.remove("hidden");
+      document.getElementById("userName").textContent += " (viewing as admin)";
+    }
+  } catch (e) {
+    localStorage.clear();
+    window.location.href = "/";
+    return;
+  }
+  loadExams();
+  checkActiveAttempt();
+  loadUnreadCount();
+}
+
+async function checkActiveAttempt() {
+  if (isImpersonating) return;
+  try {
+    const res = await fetch(`${API}/candidate/active-attempt`, { headers: authHeaders() });
+    if (!res.ok) return;
+    const active = await res.json();
+    if (active) {
+      document.getElementById("resumeBanner").classList.remove("hidden");
+      const mins = Math.floor(active.remaining_seconds / 60);
+      document.getElementById("resumeText").textContent =
+        `${active.exam_title} \u2014 about ${mins} minute(s) remaining. The clock has kept running.`;
+      document.getElementById("resumeBtn").onclick = () => resumeExam(active);
+    }
+  } catch (e) { /* silent */ }
+}
+
+async function resumeExam(active) {
+  try {
+    const [qRes, aRes] = await Promise.all([
+      fetch(`${API}/attempts/${active.attempt_id}/questions`, { headers: authHeaders() }),
+      fetch(`${API}/attempts/${active.attempt_id}/answers`, { headers: authHeaders() }),
+    ]);
+    const questions = await qRes.json();
+    const savedAnswers = await aRes.json();
+    if (!qRes.ok) throw new Error(questions.detail || "Could not load exam questions");
+    if (!aRes.ok) throw new Error(savedAnswers.detail || "Could not load saved answers");
+    if (new Set(questions.map(q => q.id)).size !== questions.length) {
+      throw new Error("The server returned a repeated exam question");
+    }
+
+    session = {
+      attemptId: active.attempt_id,
+      title: active.exam_title,
+      questions,
+      answers: {},
+      currentIndex: 0,
+      remainingSeconds: active.remaining_seconds,
+      startedAt: Date.now(),
+    };
+    for (const q of questions) {
+      const key = String(q.id);
+      if (isAnsweredValue(savedAnswers[key])) session.answers[q.id] = savedAnswers[key];
+    }
+
+    document.getElementById("dashboardView").classList.add("hidden");
+    document.getElementById("examView").classList.remove("hidden");
+    document.getElementById("examTitleHeader").textContent = session.title;
+
+    try { document.documentElement.requestFullscreen && document.documentElement.requestFullscreen().catch(()=>{}); } catch(e) {}
+
+    buildNavGrid();
+    renderQuestion();
+    startTimer();
+    startSync();
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+  } catch (err) {
+    showAlert("Could not resume your exam. Please contact NIRPR support.", "error");
+  }
+}
+
+let examsCache = [];
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, ch => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  })[ch]);
+}
+
+async function loadExams() {
+  const res = await fetch(`${API}/exams`, { headers: authHeaders() });
+  const exams = await res.json();
+  examsCache = exams;
+
+  // Merge in the candidate's active (in-progress) attempt, if any, so the
+  // matching exam card can show real "answered / total" progress instead
+  // of nothing at all.
+  try {
+    const activeRes = await fetch(`${API}/candidate/active-attempt`, { headers: authHeaders() });
+    if (activeRes.ok) {
+      const active = await activeRes.json();
+      if (active && active.exam_id) {
+        const match = exams.find(e => e.id === active.exam_id);
+        if (match) {
+          match.attempt = {
+            total_questions: active.total_questions,
+            answered_questions: active.answered_questions,
+          };
+          match.resumable = true;
+        }
+      }
+    }
+  } catch (e) { /* non-fatal — progress just won't show */ }
+
+  const list = document.getElementById("examsList");
+  if (!exams.length) {
+    list.innerHTML = `<div class="empty-state">No exams have been scheduled for your training programme yet.</div>`;
+    return;
+  }
+    list.innerHTML = exams.map(e => `
+      <article class="exam-card">
+        <div class="exam-copy">
+          <h3>${e.title}</h3>
+          <div class="exam-meta">
+            <span>${escapeHtml(e.training_program_name)}</span>
+            <span>Pass mark: ${Number(e.passing_score).toFixed(0)}%</span>
+            <span>${e.duration_minutes} min</span>
+            <span>${e.questions_per_exam} questions</span>
+          </div>
+          <p class="course-summary">${escapeHtml(e.program_description || e.exam_description || `Professional assessment in ${e.practice_area}.`)}</p>
+          <div class="course-facts">
+            <span><strong>Practice area:</strong> ${escapeHtml(e.practice_area)}</span>
+            <span><strong>Maximum attempts:</strong> ${e.max_attempts}</span>
+          </div>
+          <div class="exam-window">
+            Available ${new Date(e.start_time).toLocaleString()}
+            <span aria-hidden="true">&rarr;</span>
+            ${new Date(e.end_time).toLocaleString()}
+          </div>
+          ${e.status === 'active' && !e.can_start ? `<div class="alert warn" style="margin-top:12px">${escapeHtml(e.access_message || 'Payment approval is required before you can participate.')}</div>` : ''}
+          ${examCardProgress(e)}
+        </div>
+        <div class="exam-actions">
+          ${statusBadge(e.status, e)}
+          ${e.status === 'active'
+            ? (isImpersonating
+                ? `<button class="btn small secondary" disabled title="Exam-taking is disabled while viewing as this candidate">${e.resumable ? 'Resume exam' : 'Start exam'}</button>`
+                : (e.can_start
+                    ? `<button class="btn small" onclick="beginStart(${e.id})">${e.resumable ? 'Resume exam' : 'Start exam'}</button>`
+                    : `<button class="btn small secondary" disabled title="Payment receipt approval or administrative access is required">Awaiting payment approval</button>`))
+            : ''}
+        </div>
+      </article>
+    `).join("");
+}
+
+async function loadResults() {
+  const res = await fetch(`${API}/candidate/results`, { headers: authHeaders() });
+  const results = await res.json();
+  const list = document.getElementById("resultsList");
+  const released = results.filter(r => r.status === 'approved');
+  document.getElementById('appealAttempt').innerHTML='<option value="">Select a released result</option>'+released.map(r=>`<option value="${r.attempt_id}">${escapeHtml(r.exam_title)} — ${Number(r.percentage).toFixed(1)}%</option>`).join('');
+  loadAppealHistory();
+  if (!results.length) {
+    list.innerHTML = `<div class="empty-state">You have not attempted any exams yet.</div>`;
+    return;
+  }
+  list.innerHTML = `<table><thead><tr>
+      <th>Exam</th><th>Programme</th><th>Status</th><th>Score</th><th>Certificate</th><th>Appeal</th>
+    </tr></thead><tbody>
+    ${results.map(r => {
+      let statusBadge = '<span class="badge gray">Under Review</span>';
+      if (r.status === 'approved') statusBadge = r.passed ? '<span class="badge green">Passed</span>' : '<span class="badge red">Not Passed</span>';
+      if (r.status === 'rejected') statusBadge = '<span class="badge red">Result Withheld</span>';
+      return `<tr>
+        <td>${r.exam_title}</td>
+        <td>${r.training_program}</td>
+        <td>${statusBadge}</td>
+        <td>${r.status === 'approved' ? r.percentage.toFixed(1) + '%' : '—'}</td>
+        <td>${r.certificate_eligible ? `<button type="button" class="btn small secondary" onclick="downloadCertificate(${r.attempt_id})">Download PDF</button>` : '—'}</td>
+        <td>${r.status === 'approved' ? `<button type="button" class="btn small ghost" onclick="prepareAppeal(${r.attempt_id})">Open appeal form</button>` : '—'}</td>
+      </tr>`;
+    }).join("")}
+  </tbody></table>`;
+}
+
+window.prepareAppeal=function(attemptId){document.getElementById('appealAttempt').value=String(attemptId);document.getElementById('appealFormCard').scrollIntoView({behavior:'smooth',block:'center'});document.getElementById('appealReason').focus();};
+document.getElementById('appealReason').addEventListener('input',e=>document.getElementById('appealCharacterCount').textContent=`${e.target.value.length} / 5000 characters (minimum 20)`);
+document.getElementById('appealForm').addEventListener('submit',async e=>{e.preventDefault();const reason=document.getElementById('appealReason').value.trim(),attemptId=Number(document.getElementById('appealAttempt').value),btn=document.getElementById('appealSubmitBtn');if(!attemptId)return showAlert('Select the released result you want to appeal.','error');if(reason.length<20)return showAlert('Your appeal explanation must contain at least 20 characters.','error');btn.disabled=true;btn.textContent='Submitting appeal…';try{const res=await fetch(`${API}/candidate/appeals`,{method:'POST',headers:authHeaders({'Content-Type':'application/json'}),body:JSON.stringify({attempt_id:attemptId,reason})}),data=await res.json();if(!res.ok){const detail=Array.isArray(data.detail)?data.detail.map(item=>item.msg).join('; '):data.detail;throw new Error(detail||`Appeal submission failed (${res.status})`);}showAlert('Your rewrite appeal was submitted and is awaiting administrator approval.','success');e.target.reset();document.getElementById('appealCharacterCount').textContent='0 / 5000 characters (minimum 20)';loadAppealHistory();}catch(error){showAlert(error.message,'error');}finally{btn.disabled=false;btn.textContent='Submit rewrite appeal';}});
+async function loadAppealHistory(){const res=await fetch(`${API}/candidate/appeals`,{headers:authHeaders()}),items=await res.json(),box=document.getElementById('appealHistory');box.innerHTML=items.length?`<h3>Your submitted appeals</h3><table><thead><tr><th>Submitted</th><th>Status</th><th>Reason</th><th>Resolution</th></tr></thead><tbody>${items.map(a=>`<tr><td>${new Date(a.submitted_at).toLocaleString()}</td><td><span class="badge ${['approved','upheld'].includes(a.status)?'green':a.status==='dismissed'?'red':'gold'}">${escapeHtml(a.status==='upheld'?'approved':a.status.replaceAll('_',' '))}</span></td><td>${escapeHtml(a.reason)}</td><td>${escapeHtml(a.resolution||'Awaiting review')}</td></tr>`).join('')}</tbody></table>`:'';}
+
+async function loadCertificates() {
+  const res = await fetch(`${API}/candidate/results`, { headers: authHeaders() });
+  const results = await res.json();
+  const certificates = results.filter(result => result.certificate_eligible);
+  const list = document.getElementById("certificatesList");
+  if (!certificates.length) {
+    list.innerHTML = `<div class="empty-state">No certificates are available yet. A certificate will appear here automatically after an approved passing result.</div>`;
+    return;
+  }
+  list.innerHTML = certificates.map(certificate => `
+    <article class="certificate-card">
+      <div class="certificate-icon" aria-hidden="true">&#10003;</div>
+      <div>
+        <h3>${escapeHtml(certificate.training_program)}</h3>
+        <p>${escapeHtml(certificate.exam_title)}</p>
+        <span>${escapeHtml(certificate.certificate_number)} &middot; Issued ${new Date(certificate.exam_date).toLocaleDateString()}</span>
+      </div>
+      <button type="button" class="btn" onclick="downloadCertificate(${certificate.attempt_id})">Download certificate</button>
+    </article>
+  `).join("");
+}
+
+window.downloadCertificate = async function (attemptId) {
+  try {
+    const res = await fetch(`${API}/candidate/certificates/${attemptId}/download`, { headers: authHeaders() });
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({}));
+      throw new Error(error.detail || "Certificate download failed");
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `NIRPR-Certificate-${attemptId}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    showAlert(error.message, "error");
+  }
+};
+
+let pendingExamId = null;
+window.beginStart = function (examId) {
+  const exam = examsCache.find(item => item.id === examId);
+  if (!exam) return showAlert("Could not load the selected exam information.", "error");
+  pendingExamId = examId;
+  document.getElementById("instrTitle").textContent = exam.title;
+  document.getElementById("instrBody").innerHTML = `
+    <div class="instruction-summary">
+      <div><strong>${Number(exam.passing_score).toFixed(0)}%</strong><span>Pass mark</span></div>
+      <div><strong>${exam.duration_minutes} min</strong><span>Duration</span></div>
+      <div><strong>${exam.questions_per_exam}</strong><span>Questions</span></div>
+    </div>
+    <p>${escapeHtml(exam.instructions || "Read every question carefully. You may navigate between questions before submitting, and your answers save automatically.")}</p>
+    <p><strong>Programme:</strong> ${escapeHtml(exam.training_program_name)}<br/>
+    <strong>Practice area:</strong> ${escapeHtml(exam.practice_area)}</p>`;
+  document.getElementById("instructionsModal").classList.remove("hidden");
+};
+document.getElementById("cancelStartBtn").addEventListener("click", () => {
+  document.getElementById("instructionsModal").classList.add("hidden");
+});
+document.getElementById("confirmStartBtn").addEventListener("click", async () => {
+  document.getElementById("instructionsModal").classList.add("hidden");
+  try {
+    const res = await fetch(`${API}/exams/${pendingExamId}/start`, { method: "POST", headers: authHeaders() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Could not start exam");
+    await startExamSession(data);
+  } catch (err) {
+    showAlert(err.message, "error");
+  }
+});
+
+// ---- Exam session state ----
+let session = null; // { attemptId, title, questions[], answers{}, currentIndex, remainingSeconds, timerHandle, syncHandle }
+
+async function startExamSession(startData) {
+  const res = await fetch(`${API}/attempts/${startData.attempt_id}/questions`, { headers: authHeaders() });
+  const questions = await res.json();
+  if (!res.ok) throw new Error(questions.detail || "Could not load exam questions");
+  if (new Set(questions.map(q => q.id)).size !== questions.length) {
+    throw new Error("The server returned a repeated exam question. Please reload the exam.");
+  }
+
+  session = {
+    attemptId: startData.attempt_id,
+    title: startData.exam_title,
+    questions,
+    answers: {},
+    currentIndex: 0,
+    remainingSeconds: startData.duration_minutes * 60,
+    startedAt: Date.now(),
+  };
+
+  document.getElementById("dashboardView").classList.add("hidden");
+  document.getElementById("examView").classList.remove("hidden");
+  document.getElementById("examTitleHeader").textContent = session.title;
+
+  try { document.documentElement.requestFullscreen && document.documentElement.requestFullscreen().catch(()=>{}); } catch(e) {}
+
+  buildNavGrid();
+  renderQuestion();
+  startTimer();
+  startSync();
+
+  document.addEventListener("visibilitychange", onVisibilityChange);
+  document.addEventListener("fullscreenchange", onFullscreenChange);
+}
+
+function onVisibilityChange() {
+  if (document.hidden && session) {
+    fetch(`${API}/attempts/${session.attemptId}/activity?activity_type=tab_switch`, { method: "POST", headers: authHeaders() });
+  }
+}
+function onFullscreenChange() {
+  if (!document.fullscreenElement && session) {
+    fetch(`${API}/attempts/${session.attemptId}/activity?activity_type=fullscreen_exit`, { method: "POST", headers: authHeaders() });
+  }
+}
+
+function startTimer() {
+  const timerEl = document.getElementById("examTimer");
+  session.timerHandle = setInterval(() => {
+    session.remainingSeconds--;
+    const m = Math.floor(session.remainingSeconds / 60);
+    const s = session.remainingSeconds % 60;
+    timerEl.textContent = `${m}:${s.toString().padStart(2, "0")}`;
+    timerEl.classList.toggle("low", session.remainingSeconds <= 120);
+    if (session.remainingSeconds <= 0) {
+      clearInterval(session.timerHandle);
+      void finishExam(true);
+    }
+  }, 1000);
+}
+
+// Periodically re-sync the on-screen timer against the server's authoritative
+// clock (the server timestamps when the attempt started, so this corrects
+// for client clock drift, throttled background tabs, or a slow connection).
+function startSync() {
+  session.syncHandle = setInterval(async () => {
+    if (!session) return;
+    try {
+      const res = await fetch(`${API}/attempts/${session.attemptId}/status`, { headers: authHeaders() });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.status !== "in_progress") {
+        // Exam was auto-submitted server-side (e.g. time ran out while this
+        // tab was suspended) — reflect that immediately.
+        clearInterval(session.timerHandle);
+        clearInterval(session.syncHandle);
+        document.getElementById("examView").classList.add("hidden");
+        document.getElementById("submittedView").classList.remove("hidden");
+        document.getElementById("submittedMessage").textContent =
+          "Time expired and your exam was submitted automatically. Your result will be released after NIRPR review and approval.";
+        session = null;
+        return;
+      }
+      session.remainingSeconds = data.remaining_seconds;
+    } catch (e) { /* ignore transient network errors */ }
+  }, 20000);
+}
+
+function buildNavGrid() {
+  const grid = document.getElementById("qNavGrid");
+  grid.innerHTML = session.questions.map((q, i) =>
+    `<button class="q-nav-btn" id="nav-${i}" onclick="jumpTo(${i})">${i + 1}</button>`
+  ).join("");
+}
+window.jumpTo = function (i) { session.currentIndex = i; renderQuestion(); };
+
+
+function isAnsweredValue(value) {
+  return Array.isArray(value) && value.some(item => String(item).trim().length > 0);
+}
+
+function answeredCount() {
+  return Object.values(session.answers).filter(isAnsweredValue).length;
+}
+
+function updateExamCompletion() {
+  if (!session || !session.questions.length) return;
+  const total = session.questions.length;
+  const answered = answeredCount();
+  const percent = Math.round(answered / total * 100);
+  const percentEl = document.getElementById("examCompletionPercent");
+  const barEl = document.getElementById("examCompletionBar");
+  const textEl = document.getElementById("examCompletionText");
+  if (percentEl) percentEl.textContent = `${percent}%`;
+  if (barEl) {
+    barEl.style.setProperty("--progress", `${percent}%`);
+    barEl.parentElement.setAttribute("aria-valuenow", percent);
+  }
+  if (textEl) textEl.textContent = `${answered} of ${total} answered`;
+}
+
+function refreshNav() {
+  session.questions.forEach((q, i) => {
+    const btn = document.getElementById(`nav-${i}`);
+    btn.classList.toggle("answered", isAnsweredValue(session.answers[q.id]));
+    btn.classList.toggle("current", i === session.currentIndex);
+  });
+  document.getElementById("examProgress").textContent =
+  `Question ${session.currentIndex + 1} of ${session.questions.length} • ${answeredCount()} answered`;
+    updateExamCompletion();
+}
+
+function renderQuestion() {
+  const q = session.questions[session.currentIndex];
+  const selected = session.answers[q.id] || [];
+  const isTextType = q.question_type === "fill_in_gap" || q.question_type === "short_answer";
+  const multi = q.question_type === "multiple_select";
+
+  let bodyHtml;
+  if (isTextType) {
+    const blanksCount = q.question_type === "fill_in_gap"
+      ? Math.max(1, (q.question_text.match(/_{3,}/g) || []).length)
+      : 1;
+    const inputs = Array.from({ length: blanksCount }).map((_, i) => `
+      <input type="text" class="fillgap-input" data-blank="${i}"
+        name="answer-${q.id}-${i}" autocomplete="off"
+        value="${(selected[i] || '').replace(/"/g, '&quot;')}"
+        placeholder="${q.question_type === 'fill_in_gap' ? `Answer for blank ${i + 1}` : 'Your answer'}"
+        style="margin-bottom:8px;" />
+    `).join("");
+    bodyHtml = `
+      <p style="font-size:15.5px; font-weight:600; line-height:1.5;">${q.question_text}</p>
+      <p class="muted" style="font-size:12px;">
+        ${q.question_type === 'fill_in_gap' ? 'Fill in the blank(s) above. ' : 'Type your answer below. '}
+        Answers are not case-sensitive.
+      </p>
+      <div id="fillgapInputs">${inputs}</div>
+    `;
+  } else {
+    const optionsHtml = Object.entries(q.options).map(([key, text]) => {
+      const isSel = selected.includes(key);
+      return `<div class="option-row ${isSel ? 'selected' : ''}" data-option-key="${key}">
+        <input type="${multi ? 'checkbox' : 'radio'}" name="opt-${q.id}" ${isSel ? 'checked' : ''}
+          autocomplete="off" tabindex="-1" aria-hidden="true" />
+        <div><strong>${key}.</strong> ${text}</div>
+      </div>`;
+    }).join("");
+    bodyHtml = `
+      <p style="font-size:15.5px; font-weight:600; line-height:1.5;">${q.question_text}</p>
+      ${multi ? '<p class="muted" style="font-size:12px;">Select all that apply.</p>' : ''}
+      ${optionsHtml}
+    `;
+  }
+
+  document.getElementById("questionBody").innerHTML = `
+    <div class="question-heading">
+      <span class="question-counter">Question ${session.currentIndex + 1} of ${session.questions.length}</span>
+      <div class="row">
+        <span class="badge blue">${q.topic || 'General'}</span>
+        <span class="badge gray">${q.marks} mark${q.marks == 1 ? '' : 's'}</span>
+      </div>
+    </div>
+    ${bodyHtml}
+
+  `;
+
+  if (isTextType) {
+    document.querySelectorAll(".fillgap-input").forEach(input => {
+      input.addEventListener("change", () => saveTextAnswer(q));
+      input.addEventListener("blur", () => saveTextAnswer(q));
+    });
+  } else {
+    document.querySelectorAll(".option-row").forEach(row => {
+      row.addEventListener("click", () => selectOption(row.dataset.optionKey, multi, q.id));
+      const input = row.querySelector("input");
+      input.checked = isAnsweredValue(selected) && selected.includes(row.dataset.optionKey);
+    });
+  }
+
+  document.getElementById("prevBtn").disabled = session.currentIndex === 0;
+  document.getElementById("nextBtn").textContent =
+    session.currentIndex === session.questions.length - 1 ? "Finish reviewing" : "Next \u2192";
+
+  refreshNav();
+}
+
+function saveTextAnswer(q) {
+  const inputs = Array.from(document.querySelectorAll(".fillgap-input"))
+    .sort((a, b) => a.dataset.blank - b.dataset.blank)
+    .map(el => el.value.trim());
+  if (!inputs.some(v => v.length)) {
+    delete session.answers[q.id];
+  } else {
+    session.answers[q.id] = inputs;
+  }
+  refreshNav();
+
+  fetch(`${API}/attempts/${session.attemptId}/answer`, {
+    method: "POST",
+    headers: authHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify({ question_id: q.id, selected_answer: inputs, time_spent_seconds: 0 }),
+  }).catch(() => {});
+}
+
+window.selectOption = function (key, multi, questionId) {
+  const q = session.questions[session.currentIndex];
+  // Ignore a delayed click from DOM belonging to the previous question.
+  if (String(q.id) !== String(questionId)) return;
+  let current = session.answers[q.id] || [];
+  if (multi) {
+    current = current.includes(key) ? current.filter(k => k !== key) : [...current, key];
+  } else {
+    current = [key];
+  }
+  if (isAnsweredValue(current)) session.answers[q.id] = current;
+  else delete session.answers[q.id];
+  renderQuestion();
+
+  fetch(`${API}/attempts/${session.attemptId}/answer`, {
+    method: "POST",
+    headers: authHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify({ question_id: q.id, selected_answer: current, time_spent_seconds: 0 }),
+  }).catch(() => {});
+};
+
+document.getElementById("prevBtn").addEventListener("click", () => {
+  if (session.currentIndex > 0) { session.currentIndex--; renderQuestion(); }
+});
+document.getElementById("nextBtn").addEventListener("click", () => {
+  if (session.currentIndex < session.questions.length - 1) { session.currentIndex++; renderQuestion(); }
+});
+
+document.getElementById("submitExamBtn").addEventListener("click", () => {
+  const unanswered = session.questions.length - answeredCount();
+  const msg = unanswered > 0
+    ? `You have ${unanswered} unanswered question(s). Submit anyway?`
+    : "Submit your exam now? This cannot be undone.";
+  if (confirm(msg)) finishExam(false);
+});
+
+// ---- Scientific Calculator ----
+// Expression-based: buttons build up a text expression, "=" evaluates it
+// with a small hand-written recursive-descent parser below (never eval()).
+const sciCalc = { expr: "", angleMode: "deg" };
+
+function calcRenderSci() {
+  document.getElementById("calcDisplay").textContent = sciCalc.expr || "0";
+}
+
+function calcAppend(token) {
+  if (sciCalc.expr === "Error") sciCalc.expr = "";
+  sciCalc.expr += token;
+  calcRenderSci();
+}
+
+function calcClear() { sciCalc.expr = ""; calcRenderSci(); }
+
+function calcBackspace() {
+  sciCalc.expr = sciCalc.expr === "Error" ? "" : sciCalc.expr.slice(0, -1);
+  calcRenderSci();
+}
+
+function calcToggleAngleMode() {
+  sciCalc.angleMode = sciCalc.angleMode === "deg" ? "rad" : "deg";
+  document.getElementById("angleModeBtn").textContent = sciCalc.angleMode.toUpperCase();
+}
+
+function calcSquare() {
+  if (!sciCalc.expr || sciCalc.expr === "Error") return;
+  sciCalc.expr = `(${sciCalc.expr})^2`;
+  calcRenderSci();
+}
+
+function calcInverse() {
+  if (!sciCalc.expr || sciCalc.expr === "Error") return;
+  sciCalc.expr = `1/(${sciCalc.expr})`;
+  calcRenderSci();
+}
+
+function calcNegate() {
+  if (!sciCalc.expr || sciCalc.expr === "Error") return;
+  sciCalc.expr = sciCalc.expr.startsWith("-(") && sciCalc.expr.endsWith(")")
+    ? sciCalc.expr.slice(2, -1)
+    : `-(${sciCalc.expr})`;
+  calcRenderSci();
+}
+
+function calcEvaluate() {
+  if (!sciCalc.expr) return;
+  try {
+    const openCount = (sciCalc.expr.match(/\(/g) || []).length;
+    const closeCount = (sciCalc.expr.match(/\)/g) || []).length;
+    const padded = sciCalc.expr + ")".repeat(Math.max(0, openCount - closeCount));
+    const result = evalMathExpression(padded, sciCalc.angleMode);
+    if (!Number.isFinite(result)) throw new Error("not finite");
+    sciCalc.expr = String(Math.round(result * 1e10) / 1e10);
+  } catch (e) {
+    sciCalc.expr = "Error";
+  }
+  calcRenderSci();
+}
+
+// Small recursive-descent parser: expression := term (('+'|'-') term)*
+// term := power (('*'|'/'|'%') power)* ; power := unary ('^' power)? (right-assoc)
+// unary := ('-'|'+')? primary ; primary := number | constant | func '(' expr ')' | '(' expr ')'
+function evalMathExpression(input, angleMode) {
+  const s = input.replace(/\s+/g, "");
+  let pos = 0;
+  const peek = () => s[pos];
+  const toRad = (x) => angleMode === "deg" ? x * Math.PI / 180 : x;
+
+  function parseExpression() {
+    let value = parseTerm();
+    while (peek() === "+" || peek() === "-") {
+      const op = s[pos++];
+      const rhs = parseTerm();
+      value = op === "+" ? value + rhs : value - rhs;
+    }
+    return value;
+  }
+  function parseTerm() {
+    let value = parsePower();
+    while (peek() === "*" || peek() === "/" || peek() === "%") {
+      const op = s[pos++];
+      const rhs = parsePower();
+      if (op === "*") value *= rhs;
+      else if (op === "/") value /= rhs;
+      else value = value % rhs;
+    }
+    return value;
+  }
+  function parsePower() {
+    const value = parseUnary();
+    if (peek() === "^") {
+      pos++;
+      return Math.pow(value, parsePower());
+    }
+    return value;
+  }
+  function parseUnary() {
+    if (peek() === "-") { pos++; return -parseUnary(); }
+    if (peek() === "+") { pos++; return parseUnary(); }
+    return parsePrimary();
+  }
+  function parsePrimary() {
+    if (peek() === "(") {
+      pos++;
+      const value = parseExpression();
+      if (peek() !== ")") throw new Error("Mismatched parentheses");
+      pos++;
+      return value;
+    }
+    if (/[a-zA-Z]/.test(peek())) {
+      let start = pos;
+      while (pos < s.length && /[a-zA-Z]/.test(peek())) pos++;
+      const id = s.slice(start, pos);
+      if (id === "pi") return Math.PI;
+      if (id === "e") return Math.E;
+      if (peek() === "(") {
+        pos++;
+        const arg = parseExpression();
+        if (peek() !== ")") throw new Error("Mismatched parentheses");
+        pos++;
+        switch (id) {
+          case "sin": return Math.sin(toRad(arg));
+          case "cos": return Math.cos(toRad(arg));
+          case "tan": return Math.tan(toRad(arg));
+          case "log": return Math.log10(arg);
+          case "antilog": return Math.pow(10, arg);
+          case "ln": return Math.log(arg);
+          case "exp": return Math.exp(arg);
+          case "sqrt":
+            if (arg < 0) throw new Error("Negative sqrt");
+            return Math.sqrt(arg);
+          default: throw new Error("Unknown function " + id);
+        }
+      }
+      throw new Error("Unknown identifier " + id);
+    }
+    let start = pos;
+    while (pos < s.length && /[0-9.]/.test(peek())) pos++;
+    if (start === pos) throw new Error("Unexpected character: " + peek());
+    return parseFloat(s.slice(start, pos));
+  }
+
+  if (!s) throw new Error("Empty expression");
+  const result = parseExpression();
+  if (pos !== s.length) throw new Error("Unexpected trailing input");
+  return result;
+}
+
+document.querySelectorAll(".sci-grid .calc-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    if (btn.dataset.append !== undefined) {
+      calcAppend(btn.dataset.append);
+    } else {
+      switch (btn.dataset.action) {
+        case "clear": calcClear(); break;
+        case "backspace": calcBackspace(); break;
+        case "evaluate": calcEvaluate(); break;
+        case "toggleAngle": calcToggleAngleMode(); break;
+        case "square": calcSquare(); break;
+        case "inverse": calcInverse(); break;
+        case "negate": calcNegate(); break;
+      }
+    }
+  });
+});
+
+document.getElementById("toggleCalcBtn").addEventListener("click", () => {
+  document.getElementById("calculatorPanel").classList.toggle("hidden");
+});
+document.getElementById("closeCalcBtn").addEventListener("click", () => {
+  document.getElementById("calculatorPanel").classList.add("hidden");
+});
+
+async function finishExam(autoSubmit) {
+  if (!session || session.submitting) return;
+  session.submitting = true;
+  const finishingSession = session;
+  document.getElementById("calculatorPanel").classList.add("hidden");
+  if (finishingSession.timerHandle) clearInterval(finishingSession.timerHandle);
+  if (finishingSession.syncHandle) clearInterval(finishingSession.syncHandle);
+  document.removeEventListener("visibilitychange", onVisibilityChange);
+  document.removeEventListener("fullscreenchange", onFullscreenChange);
+  try { document.fullscreenElement && document.exitFullscreen && document.exitFullscreen().catch(()=>{}); } catch(e) {}
+
+  const spent = Math.floor((Date.now() - finishingSession.startedAt) / 1000);
+  const endpoint = autoSubmit ? "auto-submit" : "submit";
+  try {
+    const res = await fetch(`${API}/attempts/${finishingSession.attemptId}/${endpoint}`, {
+      method: "POST",
+      headers: authHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify({ answers: [], time_spent_seconds: spent }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.detail || "Submission failed");
+    document.getElementById("examView").classList.add("hidden");
+    document.getElementById("submittedView").classList.remove("hidden");
+    document.getElementById("submittedMessage").textContent = autoSubmit
+      ? "Time expired and your exam was submitted automatically. Your result will be released after NIRPR review and approval."
+      : "Your exam has been submitted successfully. Your result will be released after NIRPR review and approval.";
+    session = null;
+  } catch (err) {
+    finishingSession.submitting = false;
+    session = finishingSession;
+    if (autoSubmit) {
+      // Keep retrying while the server-side status check independently
+      // enforces expiry. This covers brief connection or authentication lag.
+      setTimeout(() => { if (session === finishingSession) void finishExam(true); }, 5000);
+      alert("Time has expired. Automatic submission is being retried; please keep this page open.");
+    } else {
+      startTimer();
+      startSync();
+      alert(`There was a problem submitting your exam: ${err.message}`);
+    }
+  }
+}
+
+document.getElementById("backToDashboardBtn").addEventListener("click", () => {
+  document.getElementById("submittedView").classList.add("hidden");
+  document.getElementById("dashboardView").classList.remove("hidden");
+  document.getElementById("resumeBanner").classList.add("hidden");
+  loadExams();
+});
+
+// Accessibility preferences persist per browser and apply to both dashboard and exam.
+let fontScale = Number(localStorage.getItem('nirpr_font_scale') || 1);
+const accentColors={green:['#046a38','#034d29','#e8f3ee'],blue:['#1769aa','#0d4778','#e8f2fb'],purple:['#6b3fa0','#47246f','#f1eafb'],teal:['#087f8c','#055761','#e4f5f6']};
+function applyDisplay(){
+  const theme=localStorage.getItem('nirpr_theme')||'light',accent=localStorage.getItem('nirpr_accent')||'green',colors=accentColors[accent]||accentColors.green;
+  document.body.dataset.theme=theme; document.body.style.zoom=fontScale;
+  document.documentElement.style.setProperty('--nirpr-green',colors[0]);document.documentElement.style.setProperty('--nirpr-green-dark',colors[1]);document.documentElement.style.setProperty('--nirpr-green-light',colors[2]);
+  document.documentElement.style.setProperty('--teal',colors[0]);document.documentElement.style.setProperty('--teal-soft',colors[2]);document.documentElement.style.setProperty('--portal-nav',colors[0]);document.documentElement.style.setProperty('--portal-nav-dark',colors[1]);
+  document.getElementById('themeSelect').value=theme;document.getElementById('colorSelect').value=accent;document.getElementById('fontScaleLabel').textContent=`${Math.round(fontScale*100)}%`;
+}
+document.getElementById('themeSelect').onchange=e=>{localStorage.setItem('nirpr_theme',e.target.value);applyDisplay();};
+document.getElementById('colorSelect').onchange=e=>{localStorage.setItem('nirpr_accent',e.target.value);applyDisplay();};
+document.getElementById('fontUp').onclick=()=>{fontScale=Math.min(1.35,fontScale+.1);localStorage.setItem('nirpr_font_scale',fontScale);applyDisplay();};
+document.getElementById('fontDown').onclick=()=>{fontScale=Math.max(.85,fontScale-.1);localStorage.setItem('nirpr_font_scale',fontScale);applyDisplay();};
+document.getElementById('fontReset').onclick=()=>{fontScale=1;localStorage.setItem('nirpr_font_scale',fontScale);applyDisplay();};
+applyDisplay();
+
+function reportSecurityEvent(type) {
+  if (!session) return;
+  fetch(`${API}/attempts/${session.attemptId}/activity?activity_type=${encodeURIComponent(type)}`, {method:'POST',headers:authHeaders()}).catch(()=>{});
+}
+document.addEventListener('copy',e=>{if(session){e.preventDefault();reportSecurityEvent('clipboard_copy_blocked');}});
+document.addEventListener('cut',e=>{if(session){e.preventDefault();reportSecurityEvent('clipboard_cut_blocked');}});
+document.addEventListener('paste',e=>{if(session){e.preventDefault();reportSecurityEvent('clipboard_paste_blocked');}});
+document.addEventListener('contextmenu',e=>{if(session)e.preventDefault();});
+document.addEventListener('keydown',e=>{if(!session)return; const key=e.key.toLowerCase(); if(e.key==='PrintScreen'){e.preventDefault();reportSecurityEvent('screenshot_key'); navigator.clipboard?.writeText('');} if((e.ctrlKey||e.metaKey)&&['p','s','u','c','v','x'].includes(key)){e.preventDefault();reportSecurityEvent(`blocked_shortcut_${key}`);}});
+window.addEventListener('beforeprint',()=>reportSecurityEvent('print_attempt'));
+setInterval(()=>{if(session)fetch(`${API}/attempts/${session.attemptId}/heartbeat`,{method:'POST',headers:authHeaders()}).catch(()=>{});},30000);
+const watermark=document.createElement('div');watermark.className='exam-watermark';watermark.textContent=Array(60).fill('NIRPR SECURE EXAM • CANDIDATE SESSION').join('     ');document.body.appendChild(watermark);
+
+init();
+</script>
+</body>
+</html>

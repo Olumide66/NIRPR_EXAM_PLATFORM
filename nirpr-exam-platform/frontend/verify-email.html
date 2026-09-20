@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="icon" type="image/jpeg" href="/static/images/nnra-logo.jpg">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Verify Email - NIRPR RSO Examination Portal</title>
+<link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="crest"><img src="/static/images/nnra-logo.jpg" alt="NNRA logo"></div>
+    <div>
+      NIRPR RSO Examination Portal
+      <div class="brand-sub">Email Verification</div>
+    </div>
+  </div>
+</div>
+
+<div class="container narrow">
+  <div class="card" style="text-align:center;">
+    <div id="iconBox" style="font-size:40px; margin-bottom:6px;">&#9203;</div>
+    <h1 id="title">Verifying your email...</h1>
+    <p class="subtitle" id="message">Please wait a moment.</p>
+    <a href="/" class="btn hidden" id="loginLink">Go to log in</a>
+  </div>
+  <div class="footer-note">&copy; NIRPR / NNRA &mdash; Radiation Safety Officer Certification Examination Platform</div>
+</div>
+
+<script>
+const API = "/api";
+const params = new URLSearchParams(window.location.search);
+const token = params.get("token");
+
+async function verify() {
+  if (!token) {
+    setState("error", "Invalid link", "No verification token was provided. Please use the link from your email.");
+    return;
+  }
+  try {
+    const res = await fetch(`${API}/auth/verify-email?token=${encodeURIComponent(token)}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Verification failed");
+    setState("success", "Email verified!", data.detail);
+  } catch (err) {
+    setState("error", "Verification failed", err.message);
+  }
+}
+
+function setState(kind, title, message) {
+  document.getElementById("iconBox").textContent = kind === "success" ? "\u2705" : "\u26A0\uFE0F";
+  document.getElementById("title").textContent = title;
+  document.getElementById("message").textContent = message;
+  document.getElementById("loginLink").classList.remove("hidden");
+}
+
+verify();
+</script>
+</body>
+</html>

@@ -1,0 +1,1960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="icon" type="image/jpeg" href="/static/images/nnra-logo.jpg">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin Console - NIRPR RSO Examination Platform</title>
+<link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="crest"><img src="/static/images/nnra-logo.jpg" alt="NNRA logo"></div>
+    <div>
+      NIRPR RSO Examination Portal
+      <div class="brand-sub">Administration Console</div>
+    </div>
+  </div>
+  <button type="button" class="mobile-nav-toggle" id="mobileNavToggle" aria-label="Open administration navigation" aria-controls="mainNav" aria-expanded="false"><span></span><span></span><span></span></button>
+  <nav id="mainNav">
+    <div class="mobile-nav-heading"><div><strong>Administration menu</strong><small>Navigate the examination portal</small></div><button type="button" id="mobileNavClose" aria-label="Close administration navigation">&times;</button></div>
+    <a href="#" data-view="dashboard" class="active">Dashboard</a>
+    <div class="nav-menu"><button type="button" class="nav-menu-trigger" aria-expanded="false">Examination Setup <span>▾</span></button><div class="nav-dropdown">
+      <a href="#" data-view="programs">Training Programmes</a><a href="#" data-view="questions">Question Banks</a><a href="#" data-view="exams">Exams &amp; Schedules</a>
+    </div></div>
+    <div class="nav-menu"><button type="button" class="nav-menu-trigger" aria-expanded="false">Exam Operations <span>▾</span></button><div class="nav-dropdown">
+      <a href="#" data-view="approvals">Result Approvals</a><a href="#" data-view="monitoring">Live Monitoring</a><a href="#" data-view="reports">Reports &amp; Statistics</a>
+    </div></div>
+    <div class="nav-menu"><button type="button" class="nav-menu-trigger" aria-expanded="false">Administration <span>▾</span></button><div class="nav-dropdown">
+      <a href="#" data-view="governance">Governance &amp; Services</a><a href="#" data-view="users">User Management</a><a href="#" data-view="audit">Audit Log</a>
+    </div></div>
+    <div class="nav-menu settings-menu"><button type="button" class="nav-menu-trigger" aria-expanded="false">Settings <span>▾</span></button><div class="nav-dropdown nav-dropdown-right">
+      <button type="button" id="displaySettingsBtn">Appearance &amp; theme</button><button type="button" id="switchRoleBtn">View as candidate</button><button type="button" id="logoutBtn" class="logout-menu-item">Log out securely</button>
+    </div></div>
+  </nav>
+  <div class="user-chip">
+    <span id="userName"></span>
+  </div>
+</div>
+<div class="mobile-nav-backdrop" id="mobileNavBackdrop" aria-hidden="true"></div>
+
+<div class="container" id="app">
+  <div id="alertBox"></div>
+
+  <!-- DASHBOARD -->
+  <section id="view-dashboard">
+    <div class="dashboard-hero"><div><span class="eyebrow">Administration overview</span><h1>Dashboard</h1><p>Monitor examinations, candidate activity, approvals and payments from one place.</p></div><div><label for="dashboardProgramFilter">Show programme</label><select id="dashboardProgramFilter"><option value="">All training programmes</option></select></div></div>
+    <div class="grid cols-4" id="statCards"></div>
+    <div class="card" style="margin-top:20px;">
+      <h2>Recent attempts</h2>
+      <div id="recentAttempts"><p class="muted">Loading...</p></div>
+    </div>
+    <div class="card" style="margin-top:20px;"><div class="row between"><div><h2>Payment receipts awaiting verification</h2><p class="subtitle">Open each uploaded document before approving or rejecting it.</p></div><button class="btn small secondary" onclick="openGovernanceView()">Open all payment records</button></div><div id="dashboardPayments"><p class="muted">Loading...</p></div></div>
+    <div class="card" style="margin-top:20px;"><div class="row between"><div><h2>Candidate tags</h2><p class="subtitle">Download printable identification tags with candidate numbers, training courses and the dedicated candidate tag signature. Upload it under Governance first.</p></div><button class="btn secondary" type="button" onclick="document.querySelector('[data-view=users]').click(); document.querySelector('#userTabs [data-role=candidate]').click();">Open candidate list</button></div></div>
+  </section>
+
+  <!-- TRAINING PROGRAMMES -->
+  <section id="view-programs" class="hidden">
+    <div class="row between">
+      <h1>Training Programmes</h1>
+      <button class="btn" id="newProgramBtn">+ New Programme</button>
+    </div>
+    <div class="card">
+      <div id="programsList"><p class="muted">Loading...</p></div>
+    </div>
+  </section>
+
+  <!-- QUESTION BANKS / QUESTIONS -->
+  <section id="view-questions" class="hidden">
+    <h1>Question Banks</h1>
+    <div class="grid" style="grid-template-columns: 300px 1fr; align-items:start;">
+      <div class="card">
+        <h3>Programme</h3>
+        <select id="qProgramSelect" style="margin-bottom:14px;"></select>
+        <div class="row between" style="margin-bottom:8px;">
+          <h3 class="mb-0">Banks</h3>
+          <button class="btn small ghost" id="newBankBtn">+ New</button>
+        </div>
+        <div id="banksList"><p class="muted">Select a programme.</p></div>
+      </div>
+      <div class="card" id="questionsPanel">
+        <p class="muted">Select a question bank to manage its questions.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- EXAMS -->
+  <section id="view-exams" class="hidden">
+    <div class="row between">
+      <h1>Exams</h1>
+      <button class="btn" id="newExamBtn">+ Schedule New Exam</button>
+    </div>
+    <div class="card">
+      <div class="exam-filter-card"><div><label for="examProgramFilter">Filter examinations by training programme</label><p id="examFilterSummary">Choose one programme to display only its examinations and schedules.</p></div><div class="exam-filter-controls"><select id="examProgramFilter"><option value="">All training programmes</option></select><button type="button" class="btn" id="applyExamFilter">Apply filter</button><button type="button" class="btn secondary" id="clearExamFilter">Show all</button></div></div>
+      <div id="examsList"><p class="muted">Loading...</p></div>
+    </div>
+  </section>
+
+  <!-- APPROVALS -->
+  <section id="view-approvals" class="hidden">
+    <h1>Result Approvals</h1>
+    <p class="subtitle">Review submitted attempts and release results to candidates.</p>
+    <div class="card">
+      <div class="filter-toolbar" style="margin-bottom:14px;">
+        <select id="approvalProgramFilter" style="width:auto"><option value="">All training programmes</option></select>
+        <label class="mb-0" style="margin:0;">Filter:</label>
+        <select id="approvalFilter" style="width:auto;">
+          <option value="submitted">Pending review</option>
+          <option value="auto_submitted">Auto-submitted (time expired)</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+          <option value="">All</option>
+        </select>
+      </div>
+      <div id="approvalsList"><p class="muted">Loading...</p></div>
+    </div>
+  </section>
+
+  <!-- MONITORING -->
+  <section id="view-monitoring" class="hidden">
+    <h1>Exam Monitoring</h1>
+    <p class="subtitle">Candidates currently sitting an exam, live, with tab-switch / full-screen-exit signals and a risk indicator. A high risk score flags an attempt for human review — it never fails a candidate automatically.</p>
+    <div class="card monitoring-card">
+      <div class="filter-toolbar between monitoring-toolbar" style="margin-bottom:10px;">
+        <h3 class="mb-0">Currently in progress</h3>
+        <div class="row"><select id="monitorProgramFilter" style="width:auto"><option value="">All training programmes</option></select><button class="btn small secondary" onclick="loadLiveMonitoring()">Refresh live activity</button></div>
+      </div>
+      <div id="liveMonitoringList" class="monitoring-table-scroll"><p class="muted">Loading...</p></div>
+    </div>
+  </section>
+
+  <!-- REPORTS -->
+  <section id="view-reports" class="hidden">
+    <h1>Reports &amp; Statistical Analysis</h1>
+    <p class="subtitle">Candidate performance, topic-level accuracy, and score distribution across attempts.</p>
+    <div class="card">
+      <div class="filter-toolbar report-filters" style="margin-bottom:14px; gap:12px;">
+        <div>
+          <label class="mb-0" style="margin:0;">Training programme</label>
+          <select id="reportProgramFilter" style="width:auto;"><option value="">All programmes</option></select>
+        </div>
+        <div>
+          <label class="mb-0" style="margin:0;">Exam</label>
+          <select id="reportExamFilter" style="width:auto;"><option value="">All exams</option></select>
+        </div>
+        <div><label class="mb-0" style="margin:0;">Schedule</label><select id="reportScheduleFilter" style="width:auto"><option value="all">Complete exam — all schedules</option></select></div>
+        <div><label class="mb-0" style="margin:0;">Chart</label><select id="reportChartType" style="width:auto"><option value="bar">Bar chart</option><option value="histogram">Histogram</option><option value="pie">Pie chart</option><option value="line">Line chart</option><option value="table">Statistical table</option></select></div>
+        <button class="btn small" style="align-self:flex-end;" onclick="loadPerformanceReport()">Analyse selection</button>
+        <button class="btn small secondary" style="align-self:flex-end;" onclick="saveCurrentReport()">Save report</button>
+        <button class="btn small secondary" style="align-self:flex-end;" onclick="downloadOfficialReport()">Download official PDF</button>
+      </div>
+      <div id="reportFilterSummary" class="alert info" style="margin-bottom:16px;">Showing statistics for all training programmes and examinations.</div>
+      <div class="grid cols-3" id="reportStatCards" style="margin-bottom:20px;"></div>
+      <div id="reportScoreChart" style="margin-bottom:24px;"></div>
+      <h3>Topic-level accuracy</h3>
+      <div id="reportTopicTable" style="margin-bottom:24px;"></div>
+      <h3>Candidate performance</h3>
+      <div id="reportCandidateTable"></div>
+      <h3 style="margin-top:24px">Saved reports</h3><p class="subtitle">Saved snapshots can be deleted without affecting examinations or candidate results.</p><div id="savedReportsList"></div>
+    </div>
+  </section>
+
+  <!-- USERS -->
+  <section id="view-governance" class="hidden">
+    <h1>Governance &amp; Candidate Services</h1><p class="subtitle">Payment verification, result appeals, reminders and staff two-factor authentication.</p>
+    <div class="governance-nav" id="governanceTabs"><button class="active" data-pane="login">Staff access</button><button data-pane="payments">Payment receipts</button><button data-pane="exam-access">Candidate exam access</button><button data-pane="appeals">Appeals</button><button data-pane="notifications">Notifications</button><button data-pane="signatures">Certificate signatures</button><button data-pane="tag-signature">Candidate tag signature</button><button data-pane="security">Account security</button></div>
+    <div class="card governance-pane" data-pane="login"><div class="row between"><div><h2>Staff login approval requests</h2><p class="subtitle">Only a super administrator acting as Head of ICT or General Manager can approve staff access.</p></div><button class="btn small secondary" onclick="loadLoginApprovals()">Refresh access requests</button></div><div id="loginApprovalList"></div></div>
+    <div class="card governance-pane hidden" data-pane="payments"><div class="governance-filter-header"><div><h2>Payment receipts</h2><p class="subtitle">Search and review uploaded receipts. Ten records are shown per page.</p></div><div class="governance-filter-controls"><select id="paymentProgramFilter"><option value="">All training programmes</option></select><button class="btn small secondary" onclick="loadGovernance()">Refresh</button></div></div><label for="paymentSearch">Search receipts</label><input id="paymentSearch" type="search" placeholder="Candidate, exam, reference, file name or status"><div id="paymentReviewList" class="governance-table-scroll"></div><div id="paymentPagination" class="governance-pagination"></div></div>
+    <div class="card governance-pane hidden" data-pane="exam-access"><div class="governance-filter-header"><div><h2>Candidate exam access</h2><p class="subtitle">Search candidate access records and grant or revoke administrative access. Ten records are shown per page.</p></div><div class="governance-filter-controls"><select id="accessProgramFilter"><option value="">All training programmes</option></select><button class="btn small secondary" onclick="loadGovernance()">Refresh</button></div></div><label for="accessSearch">Search access</label><input id="accessSearch" type="search" placeholder="Candidate, email, programme, exam or access status"><div id="examAccessList" class="governance-table-scroll"></div><div id="accessPagination" class="governance-pagination"></div></div>
+    <div class="card governance-pane hidden" data-pane="appeals"><div class="row between"><div><h2>Exam rewrite appeals</h2><p class="subtitle">Approve an appeal to grant the candidate one additional attempt.</p></div><button class="btn small secondary" onclick="loadGovernance()">Refresh appeals</button></div><div id="appealReviewList"></div></div>
+    <div class="card governance-pane hidden" data-pane="notifications"><h2>Send exam notification</h2><form id="notifyForm"><input id="notifyTitle" placeholder="Reminder title" required><textarea id="notifyMessage" placeholder="Message to all active candidates" required></textarea><button class="btn">Send notification to candidates</button></form></div>
+    <div class="card governance-pane hidden" data-pane="signatures"><h2>Certificate signatures by training programme</h2><p class="subtitle">Upload the General Manager and Course Coordinator signatures used on certificates for the selected programme. These images are separate from the candidate tag signature. The supplied certificate names Dr Samuel Oyeyemi as General Manager, NIRPR, Ibadan; confirm the current authorised signatory before uploading.</p><form id="signatureForm"><div class="grid cols-2"><select id="signatureProgram" required><option value="">Select training programme</option></select><select id="signatureRole"><option value="general_manager">General Manager signature</option><option value="course_coordinator">Course Coordinator signature</option></select><input id="signatoryName" placeholder="Signatory full name" required><input id="signatoryTitle" placeholder="Official title" required><input id="signatureFile" type="file" accept=".png,.jpg,.jpeg" required></div><button class="btn">Upload certificate signature</button></form><div id="signatureStatus" style="margin-top:16px"></div></div>
+    <div class="card governance-pane hidden" data-pane="tag-signature"><h2>Candidate tag signature</h2><p class="subtitle">One signature is used on every candidate tag. Certificate signatures do not affect candidate tags. Deleting this signature immediately prevents new tag downloads until another is uploaded.</p><form id="tagSignatureForm"><div class="grid cols-2"><div><label for="tagSignatoryName">Signatory name</label><input id="tagSignatoryName" required></div><div><label for="tagSignatoryTitle">Official title</label><input id="tagSignatoryTitle" required></div><div><label for="tagSignatureFile">Signature picture</label><input id="tagSignatureFile" type="file" accept=".png,.jpg,.jpeg"></div></div><button class="btn" style="margin-top:14px">Save candidate tag signature</button></form><div id="tagSignatureStatus" style="margin-top:16px"></div></div>
+    <div class="card governance-pane hidden" data-pane="security"><h2>Staff account security</h2><div id="mfaSecurityControl"><p class="muted">Checking two-factor authentication status…</p></div></div>
+  </section>
+
+  <!-- USERS -->
+  <section id="view-users" class="hidden">
+    <div class="row between">
+      <h1>Users</h1>
+      <div class="row">
+        <button class="btn small secondary" onclick="downloadTemplate('users')">Download CSV template</button>
+        <button class="btn secondary" id="importUsersBtn">Import CSV</button>
+        <button class="btn secondary" id="newCandidateBtn">+ Add Candidate</button>
+        <button class="btn" id="newStaffBtn">+ New Staff Account</button>
+      </div>
+    </div>
+    <div class="card user-management-card">
+      <div class="tabs" id="userTabs">
+        <button class="active" data-role="">All</button>
+        <button data-role="candidate">Candidates</button>
+        <button data-role="examiner">Examiners</button>
+        <button data-role="admin">Admins</button>
+        <button data-role="super_admin">Super Admins</button>
+      </div>
+      <div class="filter-bar"><label>Training programme <select id="userProgramFilter"><option value="">All programmes</option></select></label></div>
+      <div id="usersList" class="users-table-scroll"><p class="muted">Loading...</p></div>
+    </div>
+  </section>
+
+  <!-- AUDIT LOG -->
+  <section id="view-audit" class="hidden">
+    <h1>Audit Log</h1>
+    <div class="card">
+      <div class="filter-bar"><label>Training programme <select id="auditProgramFilter"><option value="">All programmes</option></select></label><label>User role <select id="auditRoleFilter"><option value="">All roles</option><option value="candidate">Candidate</option><option value="examiner">Examiner</option><option value="admin">Admin</option><option value="super_admin">Super Admin</option></select></label></div>
+      <div id="auditList"><p class="muted">Loading...</p></div>
+    </div>
+  </section>
+</div>
+
+<!-- Generic modal -->
+<div class="modal-backdrop hidden" id="modalBackdrop">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<script>
+const API = "/api";
+function initPasswordToggles(root = document) {
+  const eyeIcons = `
+    <svg class="eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+    <svg class="eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m3 3 18 18"></path><path d="M10.6 5.2A10.8 10.8 0 0 1 12 5c6.5 0 10 7 10 7a18 18 0 0 1-2.1 3.2M6.6 6.6C3.5 8.6 2 12 2 12s3.5 7 10 7a10.4 10.4 0 0 0 4.1-.8"></path></svg>`;
+  root.querySelectorAll(".password-toggle:not([data-ready])").forEach(button => {
+    const input = document.getElementById(button.dataset.passwordTarget);
+    if (!input) return;
+    button.dataset.ready = "true";
+    button.innerHTML = eyeIcons;
+    button.addEventListener("click", () => {
+      const show = input.type === "password";
+      input.type = show ? "text" : "password";
+      button.classList.toggle("password-visible", show);
+      button.setAttribute("aria-pressed", String(show));
+      button.setAttribute("aria-label", show ? "Hide password" : "Show password");
+      input.focus({ preventScroll: true });
+    });
+  });
+}
+
+const token = localStorage.getItem("nirpr_token");
+const role = localStorage.getItem("nirpr_role");
+if (!token || role === "candidate") window.location.href = "/admin-login";
+
+function authHeaders(extra) { return Object.assign({ "Authorization": `Bearer ${token}` }, extra || {}); }
+function jsonHeaders() { return authHeaders({ "Content-Type": "application/json" }); }
+function showAlert(msg, type) { document.getElementById("alertBox").innerHTML = `<div class="alert ${type}">${msg}</div>`; setTimeout(()=>document.getElementById("alertBox").innerHTML="", 5000); }
+function esc(s) { return (s || "").toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+const adminAccents={green:['#046a38','#034d29'],blue:['#1769aa','#0d4777'],purple:['#7251a6','#4f367a'],orange:['#c05d18','#87400f']};
+function applyAdminAppearance(){const theme=localStorage.getItem('nirpr_admin_theme')||'light',scale=localStorage.getItem('nirpr_admin_scale')||'1',accent=localStorage.getItem('nirpr_admin_accent')||'green',colors=adminAccents[accent]||adminAccents.green;document.body.dataset.theme=theme;document.body.style.zoom='1';document.getElementById('app').style.zoom=scale;document.documentElement.style.setProperty('--user-font-scale','1');document.documentElement.style.setProperty('--nirpr-green',colors[0]);document.documentElement.style.setProperty('--nirpr-green-dark',colors[1]);document.documentElement.style.setProperty('--nirpr-green-light',`color-mix(in srgb, ${colors[0]} ${theme==='dark'?'19%':'11%'}, ${theme==='dark'?'#121f30':'white'})`);}
+applyAdminAppearance();
+document.getElementById('displaySettingsBtn').onclick=()=>{const theme=localStorage.getItem('nirpr_admin_theme')||'light',accent=localStorage.getItem('nirpr_admin_accent')||'green',scale=localStorage.getItem('nirpr_admin_scale')||'1';openModal(`<div class="modal-hero"><h2 class="mt-0">Customize administration panel</h2><p class="subtitle">Your display choices are saved on this device.</p></div><form id="appearanceForm"><label>Theme</label><select id="adminTheme"><option value="light">Light theme</option><option value="dark">Dark theme</option></select><label>Interface colour</label><select id="adminAccent"><option value="green">NIRPR green</option><option value="blue">Blue</option><option value="purple">Purple</option><option value="orange">Orange</option></select><label>Text size: <strong id="adminScaleLabel">${Math.round(Number(scale)*100)}%</strong></label><input id="adminScale" type="range" min="0.85" max="1.3" step="0.05" value="${scale}"><div class="row modal-actions"><button class="btn block">Apply appearance</button><button type="button" class="btn secondary block" onclick="closeModal()">Cancel</button></div></form>`);document.getElementById('adminTheme').value=theme;document.getElementById('adminAccent').value=accent;document.getElementById('adminScale').oninput=e=>{document.getElementById('adminScaleLabel').textContent=`${Math.round(e.target.value*100)}%`;document.getElementById('app').style.zoom=e.target.value;};document.getElementById('appearanceForm').onsubmit=e=>{e.preventDefault();localStorage.setItem('nirpr_admin_theme',document.getElementById('adminTheme').value);localStorage.setItem('nirpr_admin_accent',document.getElementById('adminAccent').value);localStorage.setItem('nirpr_admin_scale',document.getElementById('adminScale').value);applyAdminAppearance();closeModal();};};
+
+async function ensureProgrammeFilters(){if(!programsCache.length){const res=await fetch(`${API}/training-programs`,{headers:authHeaders()});programsCache=await res.json();}['dashboardProgramFilter','examProgramFilter','approvalProgramFilter','monitorProgramFilter','paymentProgramFilter','accessProgramFilter','signatureProgram','userProgramFilter','auditProgramFilter'].forEach(id=>{const el=document.getElementById(id);if(!el||el.dataset.ready)return;const first=el.options[0]?.outerHTML||'<option value="">All training programmes</option>';el.innerHTML=first+programsCache.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');el.dataset.ready='1';});}
+
+document.querySelectorAll('#governanceTabs button').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('#governanceTabs button').forEach(b=>b.classList.toggle('active',b===btn));document.querySelectorAll('.governance-pane').forEach(p=>p.classList.toggle('hidden',p.dataset.pane!==btn.dataset.pane));});
+document.querySelectorAll('.nav-menu-trigger').forEach(trigger=>trigger.addEventListener('click',e=>{e.stopPropagation();const menu=trigger.closest('.nav-menu'),willOpen=!menu.classList.contains('open');document.querySelectorAll('.nav-menu.open').forEach(m=>{m.classList.remove('open');m.querySelector('.nav-menu-trigger')?.setAttribute('aria-expanded','false');});menu.classList.toggle('open',willOpen);trigger.setAttribute('aria-expanded',String(willOpen));}));
+document.addEventListener('click',()=>document.querySelectorAll('.nav-menu.open').forEach(m=>{m.classList.remove('open');m.querySelector('.nav-menu-trigger')?.setAttribute('aria-expanded','false');}));
+const mobileNavToggle=document.getElementById('mobileNavToggle'),mobileNavClose=document.getElementById('mobileNavClose'),mobileNavBackdrop=document.getElementById('mobileNavBackdrop');
+function setMobileNav(open){document.body.classList.toggle('mobile-nav-open',open);mobileNavToggle.setAttribute('aria-expanded',String(open));mobileNavToggle.setAttribute('aria-label',open?'Close administration navigation':'Open administration navigation');mobileNavBackdrop.setAttribute('aria-hidden',String(!open));}
+mobileNavToggle.addEventListener('click',e=>{e.stopPropagation();setMobileNav(!document.body.classList.contains('mobile-nav-open'));});
+mobileNavClose.addEventListener('click',()=>setMobileNav(false));mobileNavBackdrop.addEventListener('click',()=>setMobileNav(false));
+document.addEventListener('keydown',e=>{if(e.key==='Escape')setMobileNav(false);});
+window.matchMedia('(min-width:761px)').addEventListener('change',e=>{if(e.matches)setMobileNav(false);});
+document.getElementById('mainNav').addEventListener('click',e=>{const link=e.target.closest('a[data-view]');if(!link)return;setMobileNav(false);document.querySelectorAll('#mainNav .nav-menu.open').forEach(menu=>{menu.classList.remove('open');menu.querySelector('.nav-menu-trigger')?.setAttribute('aria-expanded','false');});setTimeout(()=>setMobileNav(false),50);});
+
+document.getElementById("logoutBtn").addEventListener("click", () => { localStorage.clear(); window.location.href = "/admin-login"; });
+
+document.getElementById("switchRoleBtn").addEventListener("click", async () => {
+  openModal(`<h2 class="mt-0">Loading candidates...</h2>`);
+  try {
+    const res = await fetch(`${API}/admin/users?role=candidate`, { headers: authHeaders() });
+    const candidates = await res.json();
+    if (!res.ok) throw new Error("Could not load candidates");
+    if (!candidates.length) { closeModal(); showAlert("No candidate accounts exist yet.", "error"); return; }
+    openModal(`
+      <h2 class="mt-0">View as candidate</h2>
+      <p class="subtitle">You'll see exactly what this candidate sees. Exam-taking actions are disabled while viewing this way — it's for checking their experience, not acting on their behalf. This is logged.</p>
+      <label>Candidate</label>
+      <select id="switchCandidateSelect">
+        ${candidates.map(c => `<option value="${c.id}">${esc(c.full_name)} — ${esc(c.email)}</option>`).join("")}
+      </select>
+      <div class="row" style="margin-top:20px;">
+        <button type="button" class="btn secondary block" onclick="closeModal()">Cancel</button>
+        <button type="button" class="btn block" id="confirmSwitchBtn">View as this candidate</button>
+      </div>
+    `);
+    document.getElementById("confirmSwitchBtn").addEventListener("click", () => {
+      const sel = document.getElementById("switchCandidateSelect");
+      const name = sel.options[sel.selectedIndex].text.split(" — ")[0];
+      impersonateCandidate(parseInt(sel.value), name);
+    });
+  } catch (err) {
+    closeModal();
+    showAlert(err.message, "error");
+  }
+});
+
+function openModal(html) {
+  document.getElementById("modalContent").innerHTML = html;
+  document.getElementById("modalBackdrop").classList.remove("hidden");
+}
+function closeModal() { document.getElementById("modalBackdrop").classList.add("hidden"); document.getElementById("modalContent").classList.remove("signature-viewer-modal"); }
+document.getElementById("modalBackdrop").addEventListener("click", (e) => { if (e.target.id === "modalBackdrop") closeModal(); });
+
+// ---- Navigation ----
+document.querySelectorAll("#mainNav a").forEach(a => {
+  a.addEventListener("click", (e) => {
+    e.preventDefault();
+    document.querySelectorAll("#mainNav a").forEach(x => x.classList.remove("active"));
+    document.querySelectorAll("#mainNav .nav-menu-trigger").forEach(x => x.classList.remove("active"));
+    a.classList.add("active");
+    a.closest('.nav-menu')?.querySelector('.nav-menu-trigger')?.classList.add('active');
+    setMobileNav(false);
+    document.querySelectorAll("#app > section").forEach(s => s.classList.add("hidden"));
+    const view = a.dataset.view;
+    document.getElementById(`view-${view}`).classList.remove("hidden");
+    if (view === "dashboard") loadDashboard();
+    if (view === "programs") loadPrograms();
+    if (view === "questions") loadQuestionsView();
+    if (view === "exams") loadExams();
+    if (view === "approvals") loadApprovals();
+    if (view === "monitoring") loadLiveMonitoring();
+    if (view === "reports") loadReportsView();
+    if (view === "governance") loadGovernance();
+    if (view === "users") loadUsers();
+    if (view === "audit") loadAudit();
+  });
+});
+
+async function init() {
+  try {
+    const res = await fetch(`${API}/auth/me`, { headers: authHeaders() });
+    if (!res.ok) throw new Error();
+    const me = await res.json();
+    document.getElementById("userName").textContent = `${me.full_name} (${me.role.replace('_',' ')})`;
+    if (me.role === "examiner") {
+      // examiners can review/approve but not manage users or programmes structurally—still show all for simplicity,
+      // server enforces actual permissions.
+    }
+  } catch (e) {
+    localStorage.clear();
+    window.location.href = "/admin-login";
+    return;
+  }
+  await ensureProgrammeFilters();
+  loadDashboard();
+}
+
+// ---- Dashboard ----
+async function loadDashboard() {
+  await ensureProgrammeFilters();
+  const pid=document.getElementById('dashboardProgramFilter').value;
+  const res = await fetch(`${API}/admin/dashboard${pid?`?training_program_id=${pid}`:''}`, { headers: authHeaders() });
+  if (!res.ok) { showAlert("Could not load dashboard.", "error"); return; }
+  const d = await res.json();
+  document.getElementById("statCards").innerHTML = `
+    <div class="stat-card"><div class="num">${d.total_candidates}</div><div class="label">Registered Candidates</div></div>
+    <div class="stat-card"><div class="num">${d.total_exams}</div><div class="label">Total Exams</div></div>
+    <div class="stat-card"><div class="num">${d.total_questions}</div><div class="label">Active Questions</div></div>
+    <div class="stat-card"><div class="num">${d.pending_approvals}</div><div class="label">Pending Approvals</div></div>
+    <div class="stat-card"><div class="num">${d.pending_payments||0}</div><div class="label">Payment Receipts to Verify</div></div>
+  `;
+  loadDashboardPayments();
+  const list = document.getElementById("recentAttempts");
+  if (!d.recent_attempts.length) { list.innerHTML = `<div class="empty-state">No attempts yet.</div>`; return; }
+  list.innerHTML = `<table><thead><tr><th>Candidate</th><th>Exam</th><th>Status</th><th>Score</th></tr></thead><tbody>
+    ${d.recent_attempts.map(a => `<tr><td>${esc(a.candidate_name)}</td><td>${esc(a.exam_title)}</td><td>${esc(a.status)}</td><td>${a.percentage != null ? a.percentage.toFixed(1) + '%' : '—'}</td></tr>`).join("")}
+  </tbody></table>`;
+}
+
+async function loadDashboardPayments(){const pid=document.getElementById('dashboardProgramFilter').value,res=await fetch(`${API}/admin/payments${pid?`?training_program_id=${pid}`:''}`,{headers:authHeaders()}),items=await res.json(),pending=items.filter(p=>p.status==='pending'),list=document.getElementById('dashboardPayments');list.innerHTML=pending.length?`<table><thead><tr><th>Candidate name</th><th>Examination</th><th>Receipt document</th><th>Payment reference</th><th>Date uploaded</th><th>Review actions</th></tr></thead><tbody>${pending.map(p=>paymentRow(p)).join('')}</tbody></table>`:'<div class="empty-state">No payment receipts are awaiting verification for this programme.</div>';}
+document.getElementById('dashboardProgramFilter').addEventListener('change',loadDashboard);
+function paymentRow(p){return `<tr><td>${esc(p.candidate)}</td><td>${esc(p.exam)}</td><td><button class="btn small secondary" onclick="openReceipt(${p.id})">View ${esc(p.file_name||'receipt')}</button></td><td>${esc(p.reference||'—')}</td><td>${new Date(p.uploaded_at).toLocaleString()}</td><td>${p.status==='pending'?`<button class="btn small" onclick="reviewPayment(${p.id},'approved')">Approve</button> <button class="btn small danger" onclick="reviewPayment(${p.id},'rejected')">Reject</button>`:`<span class="badge ${p.status==='approved'?'green':'red'}">${p.status}</span>`}</td></tr>`;}
+window.openGovernanceView=()=>{document.querySelector('#mainNav [data-view="governance"]').click();document.querySelector('#governanceTabs [data-pane="payments"]').click();};
+window.openReceipt=async function(id){const res=await fetch(`${API}/admin/payments/${id}/file`,{headers:authHeaders()});if(!res.ok){const data=await res.json().catch(()=>({}));showAlert(data.detail||'Receipt file could not be opened.','error');return;}const type=res.headers.get('content-type')||'',url=URL.createObjectURL(await res.blob()),isImage=type.startsWith('image/'),name=`Payment receipt ${id}`;openModal(`<div class="row between"><h2 class="mt-0">${name}</h2><a class="btn small secondary" href="${url}" download="receipt-${id}">Download</a></div>${isImage?`<img src="${url}" alt="Uploaded payment receipt" style="display:block;max-width:100%;max-height:65vh;margin:auto;border:1px solid var(--border);border-radius:8px">`:`<iframe src="${url}" title="Uploaded payment receipt" style="width:100%;height:65vh;border:1px solid var(--border);border-radius:8px"></iframe>`}<div class="row" style="margin-top:14px"><button class="btn" onclick="reviewPayment(${id},'approved')">Approve receipt</button><button class="btn danger" onclick="reviewPayment(${id},'rejected')">Reject receipt</button><button class="btn secondary" onclick="closeModal()">Close</button></div>`);};
+
+// ---- Training Programmes ----
+let programsCache = [];
+async function loadPrograms() {
+  const res = await fetch(`${API}/training-programs?active_only=false`, { headers: authHeaders() });
+  programsCache = await res.json();
+  const list = document.getElementById("programsList");
+  if (!programsCache.length) { list.innerHTML = `<div class="empty-state">No training programmes yet.</div>`; return; }
+  list.innerHTML = `<table><thead><tr><th>Code</th><th>Name</th><th>Practice Area</th><th>Question Banks</th><th>Candidates</th><th>Pass Mark</th><th>Status</th><th></th></tr></thead><tbody>
+    ${programsCache.map(p => `<tr>
+      <td><strong>${esc(p.code)}</strong></td><td>${esc(p.name)}</td><td>${esc(p.practice_area)}</td>
+      <td>${p.question_bank_count}</td><td>${p.candidate_count}</td><td>${p.passing_score}%</td>
+      <td>${p.is_active ? '<span class="badge green">Active</span>' : '<span class="badge gray">Inactive</span>'}</td>
+      <td class="row" style="gap:6px;">
+        <button class="btn small ghost" onclick="generateProgrammeQuestions(${p.id}, '${esc(p.name)}')">Generate starter questions</button>
+        <button class="btn small secondary" onclick="editProgram(${p.id})">Edit</button>
+        <button class="btn small danger" onclick="deleteProgram(${p.id})">Delete</button>
+      </td>
+    </tr>`).join("")}
+  </tbody></table>`;
+}
+
+function programFormFields(p) {
+  return `
+    <label>Code</label><input id="pCode" required placeholder="e.g. RSO-DIAG-RAD" value="${esc(p?.code || '')}" ${p ? 'disabled' : ''} />
+    <label>Name</label><input id="pName" required value="${esc(p?.name || '')}" />
+    <label>Practice area</label><input id="pArea" required placeholder="e.g. Diagnostic Radiology" value="${esc(p?.practice_area || '')}" />
+    <label>Description</label><textarea id="pDesc">${esc(p?.description || '')}</textarea>
+    <div class="grid cols-2">
+      <div><label>Duration (days)</label><input type="number" id="pDuration" value="${p?.duration_days ?? 5}" min="1" /></div>
+      <div><label>Passing score (%)</label><input type="number" id="pPass" value="${p?.passing_score ?? 70}" min="0" max="100" /></div>
+    </div>
+    ${p ? `<label>Status</label>
+    <select id="pActive">
+      <option value="true" ${p.is_active ? 'selected' : ''}>Active</option>
+      <option value="false" ${!p.is_active ? 'selected' : ''}>Inactive</option>
+    </select>` : ''}
+  `;
+}
+
+window.editProgram = function (id) {
+  const p = programsCache.find(x => x.id === id);
+  if (!p) return;
+  openModal(`
+    <h2 class="mt-0">Edit training programme</h2>
+    <form id="programEditForm">
+      ${programFormFields(p)}
+      <div class="row" style="margin-top:20px;">
+        <button type="button" class="btn secondary block" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn block">Save changes</button>
+      </div>
+    </form>
+  `);
+  document.getElementById("programEditForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(`${API}/training-programs/${id}`, {
+        method: "PATCH", headers: jsonHeaders(),
+        body: JSON.stringify({
+          name: document.getElementById("pName").value.trim(),
+          practice_area: document.getElementById("pArea").value.trim(),
+          description: document.getElementById("pDesc").value.trim(),
+          duration_days: parseInt(document.getElementById("pDuration").value),
+          passing_score: parseFloat(document.getElementById("pPass").value),
+          is_active: document.getElementById("pActive").value === "true",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Failed to update programme");
+      closeModal(); showAlert("Training programme updated.", "success"); loadPrograms();
+    } catch (err) { showAlert(err.message, "error"); }
+  });
+};
+
+window.deleteProgram = async function (id) {
+  const p = programsCache.find(x => x.id === id);
+  if (!confirm(`Delete "${p?.name}"? If it has candidates or exams on record, it will be deactivated instead of deleted.`)) return;
+  try {
+    const res = await fetch(`${API}/training-programs/${id}`, { method: "DELETE", headers: authHeaders() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Failed to delete programme");
+    showAlert(data.detail, "success"); loadPrograms();
+  } catch (err) { showAlert(err.message, "error"); }
+};
+
+window.generateProgrammeQuestions=async function(id,name){const requested=prompt(`How many editable starter questions should be generated for ${name}? Enter 5 to 100.`,`15`);if(requested===null)return;const count=Number(requested);if(!Number.isInteger(count)||count<5||count>100)return showAlert('Enter a whole number from 5 to 100.','error');const res=await fetch(`${API}/training-programs/${id}/generate-starter-questions?count=${count}`,{method:'POST',headers:authHeaders()}),data=await res.json();showAlert(data.detail||'Could not generate questions',res.ok?'success':'error');if(res.ok)loadPrograms();};
+
+document.getElementById("newProgramBtn").addEventListener("click", () => {
+  openModal(`
+    <h2 class="mt-0">New training programme</h2>
+    <form id="programForm">
+      <label>Code</label><input id="pCode" required placeholder="e.g. RSO-DIAG-RAD" />
+      <label>Name</label><input id="pName" required />
+      <label>Practice area</label><input id="pArea" required placeholder="e.g. Diagnostic Radiology" />
+      <label>Description</label><textarea id="pDesc"></textarea>
+      <div class="grid cols-2">
+        <div><label>Duration (days)</label><input type="number" id="pDuration" value="5" min="1" /></div>
+        <div><label>Passing score (%)</label><input type="number" id="pPass" value="70" min="0" max="100" /></div>
+      </div>
+      <label style="display:flex;gap:9px;align-items:flex-start;padding:12px;border:1px solid var(--border);border-radius:9px"><input type="checkbox" id="pGenerateQuestions" style="width:auto;margin-top:3px" checked><span>Generate an editable starter question bank after creating this programme</span></label>
+      <div id="pQuestionCountWrap"><label>Number of starter questions</label><input type="number" id="pQuestionCount" value="15" min="5" max="30"></div>
+      <div class="row" style="margin-top:20px;">
+        <button type="button" class="btn secondary block" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn block">Create</button>
+      </div>
+    </form>
+  `);
+  document.getElementById("programForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(`${API}/training-programs`, {
+        method: "POST", headers: jsonHeaders(),
+        body: JSON.stringify({
+          code: document.getElementById("pCode").value.trim(),
+          name: document.getElementById("pName").value.trim(),
+          practice_area: document.getElementById("pArea").value.trim(),
+          description: document.getElementById("pDesc").value.trim(),
+          duration_days: parseInt(document.getElementById("pDuration").value),
+          passing_score: parseFloat(document.getElementById("pPass").value),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Failed to create programme");
+      if(document.getElementById('pGenerateQuestions').checked){const count=Math.min(30,Math.max(5,parseInt(document.getElementById('pQuestionCount').value)||15));const generated=await fetch(`${API}/training-programs/${data.id}/generate-starter-questions?count=${count}`,{method:'POST',headers:authHeaders()}),result=await generated.json();if(!generated.ok)throw new Error(result.detail||'Programme created, but starter questions could not be generated');closeModal();showAlert(`Training programme created. ${result.created} starter questions are ready for review.`,'success');}else{closeModal();showAlert("Training programme created.","success");}programsCache=[];document.querySelectorAll('[data-ready="1"]').forEach(el=>delete el.dataset.ready);loadPrograms();
+    } catch (err) { showAlert(err.message, "error"); }
+  });
+});
+
+// ---- Question Banks & Questions ----
+async function loadQuestionsView() {
+  if (!programsCache.length) {
+    const res = await fetch(`${API}/training-programs`, { headers: authHeaders() });
+    programsCache = await res.json();
+  }
+  const sel = document.getElementById("qProgramSelect");
+  sel.innerHTML = programsCache.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join("");
+  sel.onchange = () => loadBanks(parseInt(sel.value));
+  if (programsCache.length) loadBanks(parseInt(sel.value));
+}
+
+let currentBankId = null;
+async function loadBanks(programId) {
+  currentBankId = null;
+  document.getElementById("questionsPanel").innerHTML = `<p class="muted">Select a question bank to manage its questions.</p>`;
+  const res = await fetch(`${API}/question-banks?training_program_id=${programId}`, { headers: authHeaders() });
+  const banks = await res.json();
+  const list = document.getElementById("banksList");
+  if (!banks.length) { list.innerHTML = `<div class="empty-state">No banks yet for this programme.</div>`; return; }
+  list.innerHTML = banks.map(b => `
+    <div class="row between" style="padding:10px 0; border-bottom:1px solid var(--border); cursor:pointer;" onclick="selectBank(${b.id}, '${esc(b.name)}')">
+      <div>
+        <div style="font-weight:600; font-size:13.5px;">${esc(b.name)}</div>
+        <div class="muted" style="font-size:12px;">${b.question_count} questions</div>
+      </div>
+    </div>
+  `).join("");
+  document.getElementById("newBankBtn").onclick = () => newBank(programId);
+}
+
+function newBank(programId) {
+  openModal(`
+    <h2 class="mt-0">New question bank</h2>
+    <form id="bankForm">
+      <label>Name</label><input id="bName" required placeholder="e.g. Core Question Bank" />
+      <label>Description</label><textarea id="bDesc"></textarea>
+      <div class="row" style="margin-top:20px;">
+        <button type="button" class="btn secondary block" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn block">Create</button>
+      </div>
+    </form>
+  `);
+  document.getElementById("bankForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(`${API}/question-banks`, {
+        method: "POST", headers: jsonHeaders(),
+        body: JSON.stringify({
+          training_program_id: programId,
+          name: document.getElementById("bName").value.trim(),
+          description: document.getElementById("bDesc").value.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Failed to create bank");
+      closeModal(); showAlert("Question bank created.", "success"); loadBanks(programId);
+    } catch (err) { showAlert(err.message, "error"); }
+  });
+}
+
+let currentBankName = "";
+let questionsCache = [];
+window.selectBank = async function (bankId, bankName) {
+  currentBankId = bankId;
+  currentBankName = bankName;
+  const panel = document.getElementById("questionsPanel");
+  panel.innerHTML = `<p class="muted">Loading questions...</p>`;
+  const res = await fetch(`${API}/question-banks/${bankId}/questions`, { headers: authHeaders() });
+  questionsCache = await res.json();
+  const questions = questionsCache;
+  panel.innerHTML = `
+    <div class="row between" style="margin-bottom:14px;">
+      <h3 class="mb-0">${esc(bankName)} &mdash; ${questions.length} question(s)</h3>
+      <div class="row">
+        <button class="btn small secondary" onclick="downloadTemplate('questions')">Download CSV template</button>
+        <button class="btn small secondary" onclick="openImportQuestionsCSV(${bankId})">Import CSV</button>
+        <button class="btn small secondary" onclick="openBulkUpload(${bankId})">Bulk upload (JSON)</button>
+        <button class="btn small" onclick="openNewQuestion(${bankId})">+ Add question</button>
+      </div>
+    </div>
+    <div id="qList">
+      ${questions.length ? questions.map(q => `
+        <div style="padding:10px 0; border-bottom:1px solid var(--border);">
+          <div class="row between">
+            <div style="font-size:13.5px; max-width:65%;">${esc(q.question_text)}</div>
+            <div class="row" style="gap:6px;">
+              <span class="badge ${q.difficulty === 'hard' ? 'red' : q.difficulty === 'easy' ? 'green' : 'gold'}">${q.difficulty}</span>
+              ${q.is_active ? '' : '<span class="badge gray">inactive</span>'}
+              <button class="btn small secondary" onclick="editQuestion(${q.id})">Edit</button>
+              <button class="btn small ghost" onclick="viewQuestionVersions(${q.id})">Versions</button>
+              <button class="btn small danger" onclick="deleteQuestion(${q.id})">Delete</button>
+            </div>
+          </div>
+          <div class="muted" style="font-size:11.5px; margin-top:2px;">${esc(q.topic || 'Uncategorized')} &middot; ${q.marks} mark(s) &middot; ${q.question_type}</div>
+        </div>
+      `).join("") : '<div class="empty-state">No questions yet in this bank.</div>'}
+    </div>
+  `;
+};
+
+window.viewQuestionVersions=async function(questionId){const res=await fetch(`${API}/questions/${questionId}/versions`,{headers:authHeaders()}),versions=await res.json();openModal(`<h2>Question version history</h2><p class="subtitle">Every create and edit is timestamped and awaits an administrator review decision.</p>${versions.length?`<table><tr><th>Version</th><th>Changed by</th><th>Time</th><th>Review</th><th></th></tr>${versions.map(v=>`<tr><td>v${v.version}</td><td>${esc(v.changed_by)}</td><td>${new Date(v.changed_at).toLocaleString()}</td><td>${v.review_status}</td><td>${v.review_status==='pending'?`<button class="btn small" onclick="reviewQuestionVersion(${v.id},'approved',${questionId})">Approve</button> <button class="btn small danger" onclick="reviewQuestionVersion(${v.id},'rejected',${questionId})">Reject</button>`:''}</td></tr>`).join('')}</table>`:'<p>No version records are available for questions created before versioning was enabled.</p>'}`);};
+window.reviewQuestionVersion=async function(id,decision,questionId){const notes=prompt('Review notes (optional):')||'';const res=await fetch(`${API}/questions/versions/${id}/review?decision=${decision}&notes=${encodeURIComponent(notes)}`,{method:'POST',headers:authHeaders()});if(res.ok)viewQuestionVersions(questionId);};
+
+window.editQuestion = function (questionId) {
+  const q = questionsCache.find(x => x.id === questionId);
+  if (!q) return;
+  const optionsText = Object.entries(q.options || {}).map(([k, v]) => `${k}: ${v}`).join("\n");
+  openModal(`
+    <h2 class="mt-0">Edit question</h2>
+    <form id="qEditForm">
+      <label>Question text</label><textarea id="qeText" required>${esc(q.question_text)}</textarea>
+      <label>Type</label>
+      <select id="qeType">
+        <option value="multiple_choice" ${q.question_type === 'multiple_choice' ? 'selected' : ''}>Multiple choice (single answer)</option>
+        <option value="multiple_select" ${q.question_type === 'multiple_select' ? 'selected' : ''}>Multiple select (several correct)</option>
+        <option value="true_false" ${q.question_type === 'true_false' ? 'selected' : ''}>True / False</option>
+        <option value="short_answer" ${q.question_type === 'short_answer' ? 'selected' : ''}>Short answer</option>
+        <option value="fill_in_gap" ${q.question_type === 'fill_in_gap' ? 'selected' : ''}>Fill in the gap</option>
+      </select>
+      <label>Options (one per line, format: <code>A: option text</code> — leave blank for short answer / fill in gap)</label>
+      <textarea id="qeOptions" placeholder="A: Option one&#10;B: Option two">${esc(optionsText)}</textarea>
+      <label>Correct answer key(s), comma-separated (e.g. B or A,C) — or the accepted text for short answer</label>
+      <input id="qeCorrect" required value="${esc((q.correct_answer || []).join(', '))}" />
+      <label>Explanation (optional)</label><textarea id="qeExplain">${esc(q.explanation || '')}</textarea>
+      <div class="grid cols-3">
+        <div><label>Marks</label><input type="number" id="qeMarks" value="${q.marks}" step="0.5" min="0.5" /></div>
+        <div><label>Difficulty</label>
+          <select id="qeDiff">
+            <option value="easy" ${q.difficulty === 'easy' ? 'selected' : ''}>Easy</option>
+            <option value="medium" ${q.difficulty === 'medium' ? 'selected' : ''}>Medium</option>
+            <option value="hard" ${q.difficulty === 'hard' ? 'selected' : ''}>Hard</option>
+          </select>
+        </div>
+        <div><label>Topic</label><input id="qeTopic" value="${esc(q.topic || '')}" /></div>
+      </div>
+      <label>Status</label>
+      <select id="qeActive">
+        <option value="true" ${q.is_active ? 'selected' : ''}>Active</option>
+        <option value="false" ${!q.is_active ? 'selected' : ''}>Inactive</option>
+      </select>
+      <div class="row" style="margin-top:20px;">
+        <button type="button" class="btn secondary block" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn block">Save changes</button>
+      </div>
+    </form>
+  `);
+  document.getElementById("qEditForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try {
+      const optionLines = document.getElementById("qeOptions").value.split("\n").map(l => l.trim()).filter(Boolean);
+      const options = {};
+      optionLines.forEach(line => {
+        const idx = line.indexOf(":");
+        if (idx > -1) options[line.slice(0, idx).trim().toUpperCase()] = line.slice(idx + 1).trim();
+      });
+      const qType = document.getElementById("qeType").value;
+      const correctRaw = document.getElementById("qeCorrect").value;
+      const correct = (qType === 'short_answer' || qType === 'fill_in_gap')
+        ? correctRaw.split("|").map(s => s.trim()).filter(Boolean)
+        : correctRaw.split(",").map(s => s.trim().toUpperCase()).filter(Boolean);
+      const res = await fetch(`${API}/questions/${questionId}`, {
+        method: "PATCH", headers: jsonHeaders(),
+        body: JSON.stringify({
+          question_text: document.getElementById("qeText").value.trim(),
+          question_type: qType,
+          options: Object.keys(options).length ? options : {},
+          correct_answer: correct,
+          explanation: document.getElementById("qeExplain").value.trim(),
+          marks: parseFloat(document.getElementById("qeMarks").value),
+          difficulty: document.getElementById("qeDiff").value,
+          topic: document.getElementById("qeTopic").value.trim(),
+          is_active: document.getElementById("qeActive").value === "true",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Failed to update question");
+      closeModal(); showAlert("Question updated.", "success"); selectBank(currentBankId, currentBankName);
+    } catch (err) { showAlert(err.message, "error"); }
+  });
+};
+
+window.deleteQuestion = async function (questionId) {
+  if (!confirm("Deactivate this question? It will no longer be selected into new exams, but stays visible in past attempt scripts.")) return;
+  try {
+    const res = await fetch(`${API}/questions/${questionId}`, { method: "DELETE", headers: authHeaders() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Failed to delete question");
+    showAlert(data.detail || "Question deactivated.", "success"); selectBank(currentBankId, currentBankName);
+  } catch (err) { showAlert(err.message, "error"); }
+};
+
+window.openNewQuestion = function (bankId) {
+  openModal(`
+    <h2 class="mt-0">Add question</h2>
+    <form id="qForm">
+      <label>Question text</label>
+      <textarea id="qText" required placeholder="For fill-in-the-gap, mark each blank with underscores, e.g. ALARA stands for As Low As _____ Achievable."></textarea>
+      <label>Type</label>
+      <select id="qType">
+        <option value="multiple_choice">Multiple choice (single answer)</option>
+        <option value="multiple_select">Multiple select (several correct)</option>
+        <option value="true_false">True / False</option>
+        <option value="fill_in_gap">Fill in the gap</option>
+        <option value="short_answer">Short answer</option>
+      </select>
+
+      <div id="qOptionsBlock">
+        <label>Options (one per line, format: <code>A: option text</code>)</label>
+        <textarea id="qOptions" placeholder="A: Option one&#10;B: Option two&#10;C: Option three&#10;D: Option four"></textarea>
+        <label id="qCorrectLabel">Correct answer key(s), comma-separated (e.g. B or A,C)</label>
+        <input id="qCorrect" placeholder="B" />
+      </div>
+
+      <div id="qTextAnswerBlock" class="hidden">
+        <label id="qBlanksLabel">Acceptable answer(s)</label>
+        <textarea id="qBlanksAnswer" placeholder="One line per blank, in order. Separate acceptable alternatives for the same blank with a slash, e.g.&#10;Shielding/Shield&#10;ALARA/As Low As Reasonably Achievable"></textarea>
+        <p class="muted" style="font-size:12px; margin-top:-6px;">
+          For <strong>fill in the gap</strong> with several blanks, add one line per blank in the order they
+          appear in the question text. For <strong>short answer</strong>, use a single line (add extra
+          accepted phrasings on that same line separated by "/").
+        </p>
+      </div>
+
+      <label>Explanation (optional)</label><textarea id="qExplain"></textarea>
+      <div class="grid cols-3">
+        <div><label>Marks</label><input type="number" id="qMarks" value="1" step="0.5" min="0.5" /></div>
+        <div><label>Difficulty</label>
+          <select id="qDiff"><option value="easy">Easy</option><option value="medium" selected>Medium</option><option value="hard">Hard</option></select>
+        </div>
+        <div><label>Topic</label><input id="qTopic" placeholder="e.g. Dose Limits" /></div>
+      </div>
+      <div class="row" style="margin-top:20px;">
+        <button type="button" class="btn secondary block" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn block">Add question</button>
+      </div>
+    </form>
+  `);
+
+  const qTypeSel = document.getElementById("qType");
+  const toggleFields = () => {
+    const isText = qTypeSel.value === "fill_in_gap" || qTypeSel.value === "short_answer";
+    document.getElementById("qOptionsBlock").classList.toggle("hidden", isText);
+    document.getElementById("qTextAnswerBlock").classList.toggle("hidden", !isText);
+    document.getElementById("qOptions").required = !isText;
+    document.getElementById("qCorrect").required = !isText;
+    document.getElementById("qBlanksAnswer").required = isText;
+    document.getElementById("qBlanksLabel").textContent =
+      qTypeSel.value === "fill_in_gap" ? "Acceptable answer(s) — one line per blank" : "Acceptable answer(s)";
+  };
+  qTypeSel.addEventListener("change", toggleFields);
+  toggleFields();
+
+  document.getElementById("qForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try {
+      const qtype = qTypeSel.value;
+      let options = {}, correct = [];
+      if (qtype === "fill_in_gap" || qtype === "short_answer") {
+        correct = document.getElementById("qBlanksAnswer").value.split("\n").map(s => s.trim()).filter(Boolean);
+        if (!correct.length) throw new Error("Please provide at least one acceptable answer.");
+      } else {
+        const optionLines = document.getElementById("qOptions").value.split("\n").map(l => l.trim()).filter(Boolean);
+        optionLines.forEach(line => {
+          const idx = line.indexOf(":");
+          if (idx > -1) options[line.slice(0, idx).trim().toUpperCase()] = line.slice(idx + 1).trim();
+        });
+        if (!Object.keys(options).length) throw new Error("Please provide at least two options.");
+        correct = document.getElementById("qCorrect").value.split(",").map(s => s.trim().toUpperCase()).filter(Boolean);
+        if (!correct.length) throw new Error("Please provide the correct answer key(s).");
+      }
+      const res = await fetch(`${API}/questions`, {
+        method: "POST", headers: jsonHeaders(),
+        body: JSON.stringify({
+          question_bank_id: bankId,
+          question_text: document.getElementById("qText").value.trim(),
+          question_type: qtype,
+          options, correct_answer: correct,
+          explanation: document.getElementById("qExplain").value.trim(),
+          marks: parseFloat(document.getElementById("qMarks").value),
+          difficulty: document.getElementById("qDiff").value,
+          topic: document.getElementById("qTopic").value.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Failed to add question");
+      closeModal(); showAlert("Question added.", "success"); selectBank(bankId, document.querySelector('#questionsPanel h3').textContent.split(' —')[0]);
+    } catch (err) { showAlert(err.message, "error"); }
+  });
+};
+
+window.downloadTemplate = function (kind) {
+  const url = kind === "questions" ? `${API}/question-banks/csv-template` : `${API}/admin/users/csv-template`;
+  fetch(url, { headers: authHeaders() })
+    .then(res => res.blob())
+    .then(blob => {
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = kind === "questions" ? "question_import_template.csv" : "user_import_template.csv";
+      link.click();
+    })
+    .catch(() => showAlert("Could not download template.", "error"));
+};
+
+window.openImportQuestionsCSV = function (bankId) {
+  openModal(`
+    <h2 class="mt-0">Import questions from CSV</h2>
+    <p class="subtitle">Upload a CSV instead of adding questions one by one. Not sure of the format?
+      <a href="#" onclick="downloadTemplate('questions'); return false;">Download the template</a> first.</p>
+    <input type="file" id="qCsvFile" accept=".csv" required style="margin-bottom:10px;" />
+    <div id="qCsvResult"></div>
+    <div class="row" style="margin-top:16px;">
+      <button type="button" class="btn secondary block" onclick="closeModal()">Cancel</button>
+      <button type="button" class="btn block" id="qCsvSubmitBtn">Upload &amp; import</button>
+    </div>
+  `);
+  document.getElementById("qCsvSubmitBtn").addEventListener("click", async () => {
+    const fileInput = document.getElementById("qCsvFile");
+    if (!fileInput.files.length) { showAlert("Please choose a CSV file first.", "error"); return; }
+    const btn = document.getElementById("qCsvSubmitBtn");
+    btn.disabled = true; btn.textContent = "Importing...";
+    try {
+      const fd = new FormData();
+      fd.append("file", fileInput.files[0]);
+      const res = await fetch(`${API}/question-banks/${bankId}/questions/import-csv`, {
+        method: "POST", headers: authHeaders(), body: fd,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Import failed");
+      document.getElementById("qCsvResult").innerHTML = `
+        <div class="alert ${data.skipped ? 'warn' : 'success'}">
+          ${data.created} question(s) imported${data.skipped ? `, ${data.skipped} row(s) skipped` : ''}.
+          ${data.errors.length ? '<ul style="margin:6px 0 0 18px; font-size:12px;">' + data.errors.map(e => `<li>${esc(e)}</li>`).join("") + '</ul>' : ''}
+        </div>`;
+      showAlert(`${data.created} question(s) imported.`, "success");
+      selectBank(bankId, document.querySelector('#questionsPanel h3')?.textContent.split(' —')[0] || "Bank");
+    } catch (err) {
+      showAlert(err.message, "error");
+    } finally {
+      btn.disabled = false; btn.textContent = "Upload & import";
+    }
+  });
+};
+
+window.openBulkUpload = function (bankId) {
+  const sample = JSON.stringify([{
+    question_text: "Sample question text here?",
+    question_type: "multiple_choice",
+    options: { A: "Option A", B: "Option B", C: "Option C", D: "Option D" },
+    correct_answer: ["A"],
+    explanation: "Why A is correct.",
+    marks: 1, difficulty: "medium", topic: "Topic name"
+  }], null, 2);
+  openModal(`
+    <h2 class="mt-0">Bulk upload questions (JSON)</h2>
+    <p class="subtitle">Paste an array of question objects. Format example shown below.</p>
+    <textarea id="bulkJson" style="min-height:260px; font-family:monospace; font-size:12.5px;">${esc(sample)}</textarea>
+    <div class="row" style="margin-top:16px;">
+      <button type="button" class="btn secondary block" onclick="closeModal()">Cancel</button>
+      <button type="button" class="btn block" id="bulkSubmitBtn">Upload</button>
+    </div>
+  `);
+  document.getElementById("bulkSubmitBtn").addEventListener("click", async () => {
+    try {
+      const parsed = JSON.parse(document.getElementById("bulkJson").value);
+      const res = await fetch(`${API}/question-banks/${bankId}/questions/bulk`, {
+        method: "POST", headers: jsonHeaders(), body: JSON.stringify(parsed),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Bulk upload failed");
+      closeModal(); showAlert(`${data.created} question(s) uploaded.`, "success");
+      selectBank(bankId, document.querySelector('#questionsPanel h3')?.textContent.split(' —')[0] || "Bank");
+    } catch (err) { showAlert(err.message.includes("JSON") ? "Invalid JSON format." : err.message, "error"); }
+  });
+};
+
+// ---- Exams ----
+let examsCache = [];
+async function loadExams() {
+  await ensureProgrammeFilters();
+  const pid=document.getElementById('examProgramFilter').value;
+  const res = await fetch(`${API}/exams${pid?`?training_program_id=${encodeURIComponent(pid)}`:''}`, { headers: authHeaders() });
+  const data=await res.json();
+  if(!res.ok){showAlert(data.detail||'Could not filter examinations.','error');return;}
+  examsCache = data;
+  const list = document.getElementById("examsList");
+  const filter=document.getElementById('examProgramFilter'),selectedName=filter.selectedIndex>=0?filter.options[filter.selectedIndex].text:'';
+  const visibleExams=pid?examsCache.filter(e=>String(e.training_program_id||'')===pid||e.training_program_name===selectedName):examsCache;
+  document.getElementById('examFilterSummary').textContent=pid?`${visibleExams.length} examination(s) found for ${selectedName}.`:`Showing all ${visibleExams.length} examination(s).`;
+  if (!visibleExams.length) { list.innerHTML = `<div class="empty-state">No examinations or schedules are assigned to <strong>${esc(selectedName)}</strong>.</div>`; return; }
+  const badge = { draft: 'gray', scheduled: 'blue', active: 'green', completed: 'gray', archived: 'gray' };
+  list.innerHTML = `<table><thead><tr><th>Examination title</th><th>Training programme</th><th>Candidate access window</th><th>Registered candidates</th><th>Delivery status</th><th>Exam management actions</th></tr></thead><tbody>
+    ${visibleExams.map(e => `<tr>
+      <td>${esc(e.title)}</td><td>${esc(e.training_program_name)}</td>
+      <td style="font-size:12px;">${new Date(e.start_time).toLocaleString()} &rarr; ${new Date(e.end_time).toLocaleString()}</td>
+      <td>${e.registered_candidates}</td>
+      <td><span class="badge ${badge[e.status] || 'gray'}">${e.status}</span></td>
+      <td class="row" style="gap:6px;">
+        ${e.status === 'scheduled' ? `<button class="btn small" onclick="setExamStatus(${e.id}, 'active')">Open exam to candidates</button>` : ''}
+        ${e.status === 'active' ? `<button class="btn small secondary" onclick="setExamStatus(${e.id}, 'completed')">Close exam access</button>` : ''}
+        <button class="btn small ghost" onclick="openExamCandidates(${e.id}, '${esc(e.title)}')">Manage candidates & schedules</button>
+        <button class="btn small secondary" onclick="editExam(${e.id})">Edit exam details</button>
+        <button class="btn small ghost" onclick="editExamPolicy(${e.id})">Configure delivery & security rules</button>
+        <button class="btn small danger" onclick="deleteExam(${e.id})">Delete or archive exam</button>
+      </td>
+    </tr>`).join("")}
+  </tbody></table>`;
+}
+document.getElementById('applyExamFilter').addEventListener('click',loadExams);
+document.getElementById('examProgramFilter').addEventListener('change',loadExams);
+document.getElementById('clearExamFilter').addEventListener('click',()=>{document.getElementById('examProgramFilter').value='';loadExams();});
+
+window.editExam = function (examId) {
+  const e = examsCache.find(x => x.id === examId);
+  if (!e) return;
+  const toLocalInput = (iso) => {
+    const d = new Date(iso);
+    const pad = n => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+  const hasRegistrations = e.registered_candidates > 0;
+  openModal(`
+    <h2 class="mt-0">Edit exam</h2>
+    ${hasRegistrations ? `<div class="alert warn">This exam already has ${e.registered_candidates} candidate attempt(s). Question-selection settings (questions per candidate, randomization) are locked to keep existing attempts consistent — you can still edit timing, marks, and instructions.</div>` : ''}
+    <form id="examEditForm">
+      <label>Exam title</label><input id="eeTitle" required value="${esc(e.title)}" />
+      <div class="grid cols-3">
+        <div><label>Duration (min)</label><input type="number" id="eeDuration" value="${e.duration_minutes}" min="15" /></div>
+        <div><label>Questions per candidate</label><input type="number" id="eeQCount" value="${e.questions_per_exam}" min="1" ${hasRegistrations ? 'disabled' : ''} /></div>
+        <div><label>Passing score (%)</label><input type="number" id="eePass" value="${e.passing_score}" min="0" max="100" /></div>
+        <div><label>Total marks</label><input type="number" id="eeTotalMarks" value="${e.total_marks}" min="1" step="0.5" /></div>
+      </div>
+      <div class="grid cols-2">
+        <div><label>Start time</label><input type="datetime-local" id="eeStart" value="${toLocalInput(e.start_time)}" required /></div>
+        <div><label>End time</label><input type="datetime-local" id="eeEnd" value="${toLocalInput(e.end_time)}" required /></div>
+      </div>
+      <div class="row" style="margin-top:20px;">
+        <button type="button" class="btn secondary block" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn block">Save changes</button>
+      </div>
+    </form>
+  `);
+  document.getElementById("examEditForm").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    try {
+      const payload = {
+        title: document.getElementById("eeTitle").value.trim(),
+        duration_minutes: parseInt(document.getElementById("eeDuration").value),
+        passing_score: parseFloat(document.getElementById("eePass").value),
+        total_marks: parseFloat(document.getElementById("eeTotalMarks").value),
+        start_time: new Date(document.getElementById("eeStart").value).toISOString(),
+        end_time: new Date(document.getElementById("eeEnd").value).toISOString(),
+      };
+      if (!hasRegistrations) payload.questions_per_exam = parseInt(document.getElementById("eeQCount").value);
+      const res = await fetch(`${API}/exams/${examId}`, { method: "PATCH", headers: jsonHeaders(), body: JSON.stringify(payload) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Failed to update exam");
+      closeModal(); showAlert("Exam updated.", "success"); loadExams();
+    } catch (err) { showAlert(err.message, "error"); }
+  });
+};
+
+window.deleteExam = async function (examId) {
+  const e = examsCache.find(x => x.id === examId);
+  if (!confirm(`Delete "${e?.title}"? If candidates have already attempted it, it will be archived instead of deleted.`)) return;
+  try {
+    const res = await fetch(`${API}/exams/${examId}`, { method: "DELETE", headers: authHeaders() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Failed to delete exam");
+    showAlert(data.detail, "success"); loadExams();
+  } catch (err) { showAlert(err.message, "error"); }
+};
+
+window.openExamCandidates = async function (examId, examTitle) {
+  openModal(`<h2 class="mt-0">Loading candidates...</h2>`);
+  try {
+    const res = await fetch(`${API}/admin/exams/${examId}/candidates`, { headers: authHeaders() });
+    const candidates = await res.json();
+    if (!res.ok) throw new Error(candidates.detail || "Failed to load candidates");
+
+    const statusBadge = { not_started: 'gray', in_progress: 'blue', submitted: 'blue', auto_submitted: 'gold', approved: 'green', rejected: 'red' };
+    openModal(`
+      <h2 class="mt-0">${esc(examTitle)} &mdash; Candidates</h2>
+      <p class="subtitle">Grant a retake for a candidate who has used their attempts, or reschedule specific candidates onto a different window.</p>
+      <div class="row" style="margin-bottom:12px;">
+        <button class="btn small secondary" id="bulkRescheduleBtn">Reschedule selected</button>
+      </div>
+      <div style="max-height:50vh; overflow-y:auto;">
+        <table><thead><tr><th><input type="checkbox" id="selectAllCand" /></th><th>Candidate</th><th>Status</th><th>Attempts</th><th>Schedule</th><th></th></tr></thead><tbody>
+          ${candidates.map(c => `<tr>
+            <td><input type="checkbox" class="candSelect" value="${c.user_id}" /></td>
+            <td>${esc(c.full_name)}<div class="muted" style="font-size:11px;">${esc(c.email)}</div></td>
+            <td><span class="badge ${statusBadge[c.latest_status] || 'gray'}">${c.latest_status.replace('_',' ')}</span></td>
+            <td>${c.attempts_used}/${c.max_attempts}</td>
+            <td>${c.has_schedule_override
+              ? `<span class="badge gold">Custom</span> <button class="btn small ghost" onclick="clearReschedule(${examId}, ${c.user_id}, '${esc(examTitle)}')">Clear</button>`
+              : '<span class="muted" style="font-size:12px;">Standard</span>'}</td>
+            <td>${(c.attempts_used >= c.max_attempts && c.latest_status !== 'in_progress' && c.latest_status !== 'not_started')
+              ? `<button class="btn small" onclick="grantRetakeFor(${examId}, ${c.user_id}, '${esc(c.full_name)}', '${esc(examTitle)}')">Grant retake</button>`
+              : ''}</td>
+          </tr>`).join("")}
+        </tbody></table>
+      </div>
+      <div class="row" style="margin-top:16px;"><button type="button" class="btn secondary block" onclick="closeModal()">Close</button></div>
+    `);
+
+    document.getElementById("selectAllCand").addEventListener("change", (e) => {
+      document.querySelectorAll(".candSelect").forEach(cb => cb.checked = e.target.checked);
+    });
+    document.getElementById("bulkRescheduleBtn").addEventListener("click", () => {
+      const ids = Array.from(document.querySelectorAll(".candSelect:checked")).map(cb => parseInt(cb.value));
+      if (!ids.length) { showAlert("Select at least one candidate first.", "error"); return; }
+      openRescheduleForm(examId, ids, examTitle);
+    });
+  } catch (err) {
+    closeModal();
+    showAlert(err.message, "error");
+  }
+};
+
+window.grantRetakeFor = async function (examId, userId, candidateName, examTitle) {
+  const reason = prompt(`Reason for granting ${candidateName} a retake (shown in the audit log):`);
+  if (reason === null) return;
+  try {
+    // Find their most recent attempt id for this exam.
+    const res = await fetch(`${API}/admin/attempts?exam_id=${examId}`, { headers: authHeaders() });
+    const attempts = await res.json();
+    const candidateAttempts = attempts.filter(a => a.candidate_id === userId);
+    if (!candidateAttempts.length) { showAlert("No attempt found for this candidate yet.", "error"); return; }
+    const latest = candidateAttempts.sort((a, b) => b.attempt_number - a.attempt_number)[0];
+    const grantRes = await fetch(`${API}/admin/attempts/${latest.attempt_id}/grant-retake`, {
+      method: "POST", headers: jsonHeaders(), body: JSON.stringify({ reason: reason || null }),
+    });
+    const data = await grantRes.json();
+    if (!grantRes.ok) throw new Error(data.detail || "Failed to grant retake");
+    showAlert(data.detail, "success");
+    openExamCandidates(examId, examTitle);
+  } catch (err) { showAlert(err.message, "error"); }
+};
+
+function openRescheduleForm(examId, userIds, examTitle) {
+  const now = new Date();
+  const start = new Date(now.getTime() + 5 * 60000).toISOString().slice(0, 16);
+  const end = new Date(now.getTime() + 3 * 3600000).toISOString().slice(0, 16);
+  openModal(`
+    <h2 class="mt-0">Reschedule ${userIds.length} candidate(s)</h2>
+    <p class="subtitle">${esc(examTitle)}</p>
+    <form id="rescheduleForm">
+      <label>New start time</label><input type="datetime-local" id="rsStart" value="${start}" required />
+      <label>New end time</label><input type="datetime-local" id="rsEnd" value="${end}" required />
+      <label>Reason (optional)</label><textarea id="rsReason" placeholder="e.g. connectivity issues during original slot"></textarea>
+      <div class="row" style="margin-top:20px;">
+        <button type="button" class="btn secondary block" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn block">Reschedule</button>
+      </div>
+    </form>
+  `);
+  document.getElementById("rescheduleForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(`${API}/admin/exams/${examId}/reschedule`, {
+        method: "POST", headers: jsonHeaders(),
+        body: JSON.stringify({
+          user_ids: userIds,
+          start_time: new Date(document.getElementById("rsStart").value).toISOString(),
+          end_time: new Date(document.getElementById("rsEnd").value).toISOString(),
+          reason: document.getElementById("rsReason").value.trim() || null,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Failed to reschedule");
+      showAlert(data.detail, "success");
+      openExamCandidates(examId, examTitle);
+    } catch (err) { showAlert(err.message, "error"); }
+  });
+}
+
+window.clearReschedule = async function (examId, userId, examTitle) {
+  if (!confirm("Revert this candidate to the exam's normal schedule?")) return;
+  try {
+    const res = await fetch(`${API}/admin/exams/${examId}/reschedule/${userId}`, { method: "DELETE", headers: authHeaders() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Failed to clear reschedule");
+    showAlert(data.detail, "success");
+    openExamCandidates(examId, examTitle);
+  } catch (err) { showAlert(err.message, "error"); }
+};
+
+window.setExamStatus = async function (examId, status) {
+  try {
+    const res = await fetch(`${API}/exams/${examId}`, { method: "PATCH", headers: jsonHeaders(), body: JSON.stringify({ status }) });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Failed to update exam");
+    showAlert("Exam updated.", "success"); loadExams();
+  } catch (err) { showAlert(err.message, "error"); }
+};
+
+document.getElementById("newExamBtn").addEventListener("click", async () => {
+  if (!programsCache.length) {
+    const res = await fetch(`${API}/training-programs`, { headers: authHeaders() });
+    programsCache = await res.json();
+  }
+  const now = new Date();
+  const start = new Date(now.getTime() + 5 * 60000).toISOString().slice(0, 16);
+  const end = new Date(now.getTime() + 3 * 3600000).toISOString().slice(0, 16);
+  openModal(`
+    <h2 class="mt-0">Schedule exam</h2>
+    <form id="examForm">
+      <label>Training programme</label>
+      <select id="eProgram" required>${programsCache.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join("")}</select>
+      <label>Exam title</label><input id="eTitle" required placeholder="e.g. RSO Certification - July 2026" />
+      <label>Instructions (shown to candidates)</label><textarea id="eInstr"></textarea>
+      <div class="grid cols-3">
+        <div><label>Duration (min)</label><input type="number" id="eDuration" value="120" min="15" /></div>
+        <div><label>Questions per candidate</label><input type="number" id="eQCount" value="50" min="1" /></div>
+        <div><label>Total marks</label><input type="number" id="eMarks" value="100" min="1" /></div>
+      </div>
+      <div class="grid cols-2">
+        <div><label>Start time</label><input type="datetime-local" id="eStart" value="${start}" required /></div>
+        <div><label>End time</label><input type="datetime-local" id="eEnd" value="${end}" required /></div>
+      </div>
+      <label>Passing score (%)</label><input type="number" id="ePass" value="70" min="0" max="100" />
+      <div class="row" style="margin-top:20px;">
+        <button type="button" class="btn secondary block" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn block">Schedule</button>
+      </div>
+    </form>
+  `);
+  document.getElementById("examForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try {
+      const progId = parseInt(document.getElementById("eProgram").value);
+      const banksRes = await fetch(`${API}/question-banks?training_program_id=${progId}`, { headers: authHeaders() });
+      const banks = await banksRes.json();
+      const res = await fetch(`${API}/exams`, {
+        method: "POST", headers: jsonHeaders(),
+        body: JSON.stringify({
+          training_program_id: progId,
+          title: document.getElementById("eTitle").value.trim(),
+          instructions: document.getElementById("eInstr").value.trim(),
+          duration_minutes: parseInt(document.getElementById("eDuration").value),
+          questions_per_exam: parseInt(document.getElementById("eQCount").value),
+          total_marks: parseFloat(document.getElementById("eMarks").value),
+          passing_score: parseFloat(document.getElementById("ePass").value),
+          start_time: new Date(document.getElementById("eStart").value).toISOString(),
+          end_time: new Date(document.getElementById("eEnd").value).toISOString(),
+          randomize_questions: true, randomize_options: true,
+          question_bank_ids: banks.map(b => b.id),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Failed to schedule exam");
+      closeModal(); showAlert("Exam scheduled.", "success"); loadExams();
+    } catch (err) { showAlert(err.message, "error"); }
+  });
+});
+
+// ---- Approvals ----
+async function loadApprovals() {
+  await ensureProgrammeFilters();
+  const status = document.getElementById("approvalFilter").value;
+  const url = new URL(`${API}/admin/attempts`, window.location.origin);
+  if (status) url.searchParams.set("status_filter", status);
+  const pid=document.getElementById('approvalProgramFilter').value;if(pid)url.searchParams.set('training_program_id',pid);
+  const res = await fetch(url, { headers: authHeaders() });
+  const attempts = await res.json();
+  const list = document.getElementById("approvalsList");
+  if (!attempts.length) { list.innerHTML = `<div class="empty-state">Nothing here.</div>`; return; }
+  const riskBadge = { high: 'red', moderate: 'gold', low: 'gray' };
+  list.innerHTML = attempts.map(a => `
+    <div class="row between" style="padding:12px 0; border-bottom:1px solid var(--border);">
+      <div>
+        <div style="font-weight:700;">${esc(a.candidate_name)} <span class="muted" style="font-weight:400;">(${esc(a.candidate_email)})</span></div>
+        <div class="muted" style="font-size:12.5px;">${esc(a.exam_title)}</div>
+        <div style="font-size:12.5px; margin-top:4px;">
+          Score: <strong>${a.percentage != null ? a.percentage.toFixed(1) : '—'}%</strong>
+          (${a.correct_answers}/${a.total_questions} correct, ${a.total_score}/${a.total_possible_marks} marks) &middot;
+          ${a.passed ? '<span class="badge green">Passing</span>' : '<span class="badge red">Below pass mark</span>'}
+          ${a.risk_level !== 'low' ? `<span class="badge ${riskBadge[a.risk_level]}">${a.risk_level} risk (${a.risk_score}/100)</span>` : ''}
+          ${a.tab_switch_count > 0 ? `<span class="badge gold">${a.tab_switch_count} tab switch(es)</span>` : ''}
+          ${a.fullscreen_exit_count > 0 ? `<span class="badge gold">${a.fullscreen_exit_count} fullscreen exit(s)</span>` : ''}
+        </div>
+      </div>
+      <div class="row" style="flex-wrap:wrap; justify-content:flex-end; gap:6px;">
+        <span class="badge ${a.status === 'approved' ? 'green' : a.status === 'rejected' ? 'red' : 'blue'}">${a.status.replace('_',' ')}</span>
+        <button class="btn small ghost" onclick="viewScript(${a.attempt_id})">View script</button>
+        <button class="btn small ghost" onclick="viewTimeline(${a.attempt_id})">Activity log</button>
+        ${(a.status === 'submitted' || a.status === 'auto_submitted') ? `
+          <button class="btn small" onclick="approveAttempt(${a.attempt_id}, 'approve')">Approve</button>
+          <button class="btn small danger" onclick="approveAttempt(${a.attempt_id}, 'reject')">Reject</button>
+        ` : ''}
+      </div>
+    </div>
+  `).join("");
+}
+document.getElementById("approvalFilter").addEventListener("change", loadApprovals);
+document.getElementById("approvalProgramFilter").addEventListener("change", loadApprovals);
+
+window.viewScript = async function (attemptId) {
+  try {
+    const res = await fetch(`${API}/admin/attempts/${attemptId}/script`, { headers: authHeaders() });
+    const s = await res.json();
+    if (!res.ok) throw new Error(s.detail || "Could not load script");
+    openModal(`
+      <h2 class="mt-0">${esc(s.candidate_name)}'s script</h2>
+      <p class="subtitle">${esc(s.exam_title)} &middot; ${s.total_score}/${s.total_possible_marks} marks (${s.percentage.toFixed(1)}%) &middot; ${s.passed ? 'Passed' : 'Not passed'}</p>
+      <div style="max-height:60vh; overflow-y:auto;">
+        ${s.answers.map((a, i) => `
+          <div style="padding:12px 0; border-bottom:1px solid var(--border);">
+            <div class="row between">
+              <strong style="font-size:13.5px;">Q${i + 1}. ${esc(a.question_text)}</strong>
+              <span class="badge ${a.is_correct ? 'green' : 'red'}">${a.is_correct ? 'Correct' : 'Incorrect'} (${a.marks_obtained}/${a.marks_available})</span>
+            </div>
+            <div style="font-size:12.5px; margin-top:6px;">
+              ${Object.entries(a.options).map(([k, v]) => {
+                const isSelected = a.selected_answer.includes(k);
+                const isCorrect = a.correct_answer.includes(k);
+                let style = '';
+                if (isCorrect) style = 'color: var(--ok); font-weight:700;';
+                else if (isSelected && !isCorrect) style = 'color: var(--danger); font-weight:700; text-decoration: line-through;';
+                return `<div style="${style}">${isSelected ? '&#9656; ' : '&nbsp;&nbsp;'}${esc(k)}. ${esc(v)}${isCorrect ? ' &#10003;' : ''}</div>`;
+              }).join("")}
+              ${a.explanation ? `<div class="muted" style="margin-top:6px;">${esc(a.explanation)}</div>` : ''}
+            </div>
+          </div>
+        `).join("")}
+      </div>
+      <div class="row" style="margin-top:16px;"><button type="button" class="btn secondary block" onclick="closeModal()">Close</button></div>
+    `);
+  } catch (err) { showAlert(err.message, "error"); }
+};
+
+window.viewTimeline = async function (attemptId) {
+  try {
+    const res = await fetch(`${API}/admin/attempts/${attemptId}/timeline`, { headers: authHeaders() });
+    const t = await res.json();
+    if (!res.ok) throw new Error(t.detail || "Could not load activity log");
+    const riskBadgeColor = { high: 'red', moderate: 'gold', low: 'green' }[t.risk_level];
+    const labels = {
+      exam_started: "Exam started", tab_switch: "Switched tab / lost focus",
+      fullscreen_exit: "Exited full-screen mode", exam_submitted: "Exam submitted",
+      exam_auto_submitted: "Exam auto-submitted (time expired)",
+    };
+    openModal(`
+      <h2 class="mt-0">${esc(t.candidate_name)}'s activity log</h2>
+      <p class="subtitle">${esc(t.exam_title)}</p>
+      <div class="row wrap" style="margin-bottom:14px; gap:8px;">
+        <span class="badge ${riskBadgeColor}">Risk score: ${t.risk_score}/100 (${t.risk_level})</span>
+        <span class="badge gray">${t.tab_switch_count} tab switch(es)</span>
+        <span class="badge gray">${t.fullscreen_exit_count} fullscreen exit(s)</span>
+        ${t.ip_address ? `<span class="badge gray">IP: ${esc(t.ip_address)}</span>` : ''}
+      </div>
+      <div class="alert info" style="font-size:12.5px;">A flagged attempt is a prompt for human review, not an automatic fail. Use this alongside the candidate's script and score to make a judgement call.</div>
+      <div style="max-height:50vh; overflow-y:auto; margin-top:12px;">
+        ${t.events.map(e => `
+          <div class="row between" style="padding:8px 0; border-bottom:1px solid var(--border); font-size:13px;">
+            <span>${labels[e.type] || esc(e.type)}</span>
+            <span class="muted">${new Date(e.timestamp).toLocaleTimeString()}</span>
+          </div>
+        `).join("") || '<p class="muted">No activity events recorded.</p>'}
+      </div>
+      <div class="row" style="margin-top:16px;"><button type="button" class="btn secondary block" onclick="closeModal()">Close</button></div>
+    `);
+  } catch (err) { showAlert(err.message, "error"); }
+};
+
+// ---- Monitoring (live) ----
+async function loadLiveMonitoring() {
+  await ensureProgrammeFilters();
+  const list = document.getElementById("liveMonitoringList");
+  list.innerHTML = `<p class="muted">Loading...</p>`;
+  try {
+    const pid=document.getElementById('monitorProgramFilter').value;
+    const res = await fetch(`${API}/admin/monitoring/live${pid?`?training_program_id=${pid}`:''}`, { headers: authHeaders() });
+    const rows = await res.json();
+    if (!rows.length) { list.innerHTML = `<div class="empty-state">No candidates are currently sitting an exam.</div>`; return; }
+    const riskBadge = { high: 'red', moderate: 'gold', low: 'green' };
+    list.innerHTML = `<table class="monitoring-table"><thead><tr><th>Candidate</th><th>Exam</th><th>Progress</th><th>Time left</th><th>Signals</th><th>Risk</th><th>Actions</th></tr></thead><tbody>
+      ${rows.map(r => `<tr>
+        <td>${esc(r.candidate_name)}<div class="muted" style="font-size:11.5px;">${esc(r.candidate_email)}</div></td>
+        <td>${esc(r.exam_title)}</td>
+        <td>${r.answered_questions}/${r.total_questions}</td>
+        <td>${Math.floor(r.remaining_seconds / 60)}m ${r.remaining_seconds % 60}s</td>
+        <td>${r.tab_switch_count} tab, ${r.fullscreen_exit_count} fs-exit</td>
+        <td><span class="badge ${riskBadge[r.risk_level]}">${r.risk_level} (${r.risk_score})</span></td>
+        <td><button class="btn small ghost" onclick="viewTimeline(${r.attempt_id})">Log</button></td>
+      </tr>`).join("")}
+    </tbody></table>`;
+  } catch (err) {
+    list.innerHTML = `<div class="empty-state">Could not load live monitoring.</div>`;
+  }
+}
+document.getElementById('monitorProgramFilter').addEventListener('change',loadLiveMonitoring);
+let liveMonitoringInterval = null;
+
+window.approveAttempt = async function (attemptId, action) {
+  const notes = action === 'reject' ? prompt("Reason for rejection (optional):") || "" : "";
+  try {
+    const res = await fetch(`${API}/admin/attempts/approve`, {
+      method: "POST", headers: jsonHeaders(),
+      body: JSON.stringify({ attempt_id: attemptId, action, notes }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Failed");
+    showAlert(`Result ${action}d.`, "success"); loadApprovals();
+  } catch (err) { showAlert(err.message, "error"); }
+};
+
+// ---- Reports ----
+let currentReportData=null;
+let reportExamsCache=[];
+async function loadReportsView() {
+  if (!programsCache.length) {
+    const res = await fetch(`${API}/training-programs`, { headers: authHeaders() });
+    programsCache = await res.json();
+  }
+  const progSel = document.getElementById("reportProgramFilter");
+  progSel.innerHTML = `<option value="">All programmes</option>` +
+    programsCache.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join("");
+
+  const examRes = await fetch(`${API}/exams`, { headers: authHeaders() });
+  reportExamsCache = await examRes.json();
+  const examSel = document.getElementById("reportExamFilter");
+  function refreshReportExamOptions(){const pid=progSel.value,programName=progSel.selectedIndex>=0?progSel.options[progSel.selectedIndex].text:'';const matching=pid?reportExamsCache.filter(e=>String(e.training_program_id||'')===pid||e.training_program_name===programName):reportExamsCache;examSel.innerHTML=`<option value="">All examinations in selection</option>`+matching.map(e=>`<option value="${e.id}">${esc(e.title)}</option>`).join('');document.getElementById('reportFilterSummary').textContent=pid?`${matching.length} examination(s) are available for ${programName}. Select one examination or analyse the complete programme.`:`Showing statistics for all ${matching.length} examination(s) across all training programmes.`;}
+  refreshReportExamOptions();
+  progSel.onchange=async()=>{refreshReportExamOptions();await loadReportSchedules();loadPerformanceReport();};
+  examSel.onchange=loadReportSchedules;
+  document.getElementById('reportChartType').onchange=()=>currentReportData&&renderScoreChart(currentReportData);
+  await loadReportSchedules();
+  loadPerformanceReport();loadSavedReports();
+}
+
+async function loadReportSchedules(){const examId=document.getElementById('reportExamFilter').value,sel=document.getElementById('reportScheduleFilter');if(!examId){sel.innerHTML='<option value="all">Complete selection — all schedules</option>';sel.disabled=true;return;}sel.disabled=false;const res=await fetch(`${API}/admin/reports/schedules?exam_id=${examId}`,{headers:authHeaders()}),rows=await res.json();sel.innerHTML=rows.map(s=>`<option value="${esc(s.key)}">${esc(s.label)}</option>`).join('');}
+
+window.downloadOfficialReport = async function(){const id=document.getElementById('reportExamFilter').value;if(!id){showAlert('Select one exam to export the official report.','warn');return;}const res=await fetch(`${API}/admin/reports/exams/${id}/official.pdf`,{headers:authHeaders()});if(!res.ok){showAlert('Could not generate the official report.','error');return;}const url=URL.createObjectURL(await res.blob()),a=document.createElement('a');a.href=url;a.download=`official-exam-report-${id}.pdf`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
+
+window.loadPerformanceReport = async function () {
+  const progId = document.getElementById("reportProgramFilter").value;
+  const examId = document.getElementById("reportExamFilter").value;
+  const url = new URL(`${API}/admin/reports/performance`, window.location.origin);
+  if (progId) url.searchParams.set("training_program_id", progId);
+  if (examId) url.searchParams.set("exam_id", examId);
+  const scheduleKey=document.getElementById('reportScheduleFilter').value;
+  if(scheduleKey&&scheduleKey!=='all')url.searchParams.set('schedule_key',scheduleKey);
+
+  const res = await fetch(url, { headers: authHeaders() });
+  if (!res.ok) { showAlert("Could not load report.", "error"); return; }
+  const rep = await res.json();
+  currentReportData=rep;
+  const prog=document.getElementById('reportProgramFilter'),exam=document.getElementById('reportExamFilter'),schedule=document.getElementById('reportScheduleFilter');
+  document.getElementById('reportFilterSummary').textContent=`Analysed ${rep.total_attempts_considered} completed attempt(s) for ${prog.value?prog.options[prog.selectedIndex].text:'all training programmes'}, ${exam.value?exam.options[exam.selectedIndex].text:'all examinations'} and ${schedule.options[schedule.selectedIndex]?.text||'all schedules'}.`;
+
+  document.getElementById("reportStatCards").innerHTML = `
+    <div class="stat-card"><div class="num">${rep.total_attempts_considered}</div><div class="label">Completed Attempts</div></div>
+    <div class="stat-card"><div class="num">${rep.overall_average.toFixed(1)}%</div><div class="label">Average Score</div></div>
+    <div class="stat-card"><div class="num">${rep.overall_pass_rate.toFixed(1)}%</div><div class="label">Pass Rate</div></div>
+    <div class="stat-card"><div class="num">${(rep.median_score||0).toFixed(1)}%</div><div class="label">Median Score</div></div>
+    <div class="stat-card"><div class="num">${(rep.score_standard_deviation||0).toFixed(1)}</div><div class="label">Score Standard Deviation</div></div>
+    <div class="stat-card"><div class="num">${(rep.lowest_score||0).toFixed(1)}–${(rep.highest_score||0).toFixed(1)}%</div><div class="label">Observed Score Range</div></div>
+  `;
+
+  renderScoreChart(rep);
+
+  const topicTable = document.getElementById("reportTopicTable");
+  if (!rep.topic_breakdown.length) {
+    topicTable.innerHTML = `<div class="empty-state">No answered questions in this selection yet.</div>`;
+  } else {
+    topicTable.innerHTML = `<table><thead><tr><th>Topic</th><th>Times Asked</th><th>Times Correct</th><th>Accuracy</th></tr></thead><tbody>
+      ${rep.topic_breakdown.map(t => `<tr>
+        <td>${esc(t.topic)}</td><td>${t.times_asked}</td><td>${t.times_correct}</td>
+        <td><span class="badge ${t.accuracy >= 70 ? 'green' : t.accuracy >= 50 ? 'gold' : 'red'}">${t.accuracy}%</span></td>
+      </tr>`).join("")}
+    </tbody></table>`;
+  }
+
+  const candTable = document.getElementById("reportCandidateTable");
+  if (!rep.candidates.length) {
+    candTable.innerHTML = `<div class="empty-state">No completed attempts in this selection yet.</div>`;
+  } else {
+    candTable.innerHTML = `<table><thead><tr><th>Candidate</th><th>Programme</th><th>Institution</th><th>Exams Taken</th><th>Passed</th><th>Average</th><th>Best</th></tr></thead><tbody>
+      ${rep.candidates.map(c => `<tr>
+        <td>${esc(c.full_name)}<div class="muted" style="font-size:11.5px;">${esc(c.email)}</div></td>
+        <td>${esc(c.training_program || '')}</td>
+        <td>${esc(c.institution || '—')}</td>
+        <td>${c.exams_taken}</td>
+        <td>${c.exams_passed}/${c.exams_taken}</td>
+        <td>${c.average_percentage.toFixed(1)}%</td>
+        <td>${c.best_percentage.toFixed(1)}%</td>
+      </tr>`).join("")}
+    </tbody></table>`;
+  }
+};
+
+function renderScoreChart(rep){const type=document.getElementById('reportChartType').value,bins=rep.score_distribution,total=bins.reduce((n,b)=>n+b.count,0)||1,max=Math.max(1,...bins.map(b=>b.count)),colours=['#046a38','#2878b5','#c8971f','#8e5bb7','#d8643b','#33a18c','#5b6f91','#a65170','#6b8e23','#9b6b43'];let html='<h3>Score distribution</h3><div class="chart-shell">';if(type==='pie'){let at=0;const stops=bins.map((b,i)=>{const from=at;at+=b.count/total*360;return `${colours[i]} ${from}deg ${at}deg`});html+=`<div class="pie-chart" style="background:conic-gradient(${stops.join(',')})"></div><div class="row wrap" style="justify-content:center">${bins.map((b,i)=>`<span><i style="display:inline-block;width:10px;height:10px;background:${colours[i]}"></i> ${b.range}: ${b.count}</span>`).join('')}</div>`;}else if(type==='table'){html+=`<table><thead><tr><th>Score range (%)</th><th>Candidate attempts</th><th>Share of attempts</th></tr></thead><tbody>${bins.map(b=>`<tr><td>${b.range}</td><td>${b.count}</td><td>${(b.count/total*100).toFixed(1)}%</td></tr>`).join('')}</tbody></table>`;}else if(type==='line'){const pts=bins.map((b,i)=>`${20+i*(560/(bins.length-1))},${180-b.count/max*150}`).join(' ');html+=`<svg viewBox="0 0 600 220" role="img" aria-label="Line chart of score distribution" style="width:100%;height:220px"><polyline points="${pts}" fill="none" stroke="var(--nirpr-green)" stroke-width="4"/>${bins.map((b,i)=>`<circle cx="${20+i*(560/(bins.length-1))}" cy="${180-b.count/max*150}" r="5" fill="var(--nirpr-green)"><title>${b.range}: ${b.count}</title></circle><text x="${20+i*(560/(bins.length-1))}" y="205" text-anchor="middle" font-size="10" fill="currentColor">${b.range}</text>`).join('')}</svg>`;}else{html+=`<div style="display:flex;align-items:flex-end;gap:${type==='histogram'?'0':'6px'};height:185px;border-bottom:1px solid var(--border)">${bins.map(b=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%"><span style="font-size:11px">${b.count}</span><div title="${b.range}: ${b.count}" style="width:100%;height:${Math.max(2,b.count/max*145)}px;background:var(--nirpr-green);border:${type==='histogram'?'0':'1px solid var(--card)'};border-radius:${type==='histogram'?'0':'5px 5px 0 0'}"></div><small>${b.range}</small></div>`).join('')}</div>`;}document.getElementById('reportScoreChart').innerHTML=html+'</div>';}
+
+window.saveCurrentReport=async()=>{if(!currentReportData)return showAlert('Run the analysis before saving a report.','warn');const examSel=document.getElementById('reportExamFilter'),scheduleSel=document.getElementById('reportScheduleFilter'),programmeSel=document.getElementById('reportProgramFilter'),title=`${examSel.value?examSel.options[examSel.selectedIndex].text:'General examination report'} — ${scheduleSel.options[scheduleSel.selectedIndex].text}`;const res=await fetch(`${API}/admin/reports/saved`,{method:'POST',headers:jsonHeaders(),body:JSON.stringify({title,exam_id:examSel.value?Number(examSel.value):null,training_program_id:programmeSel.value?Number(programmeSel.value):null,schedule_key:scheduleSel.value,report_data:currentReportData})}),data=await res.json();showAlert(data.detail||'Could not save report',res.ok?'success':'error');if(res.ok)loadSavedReports();};
+async function loadSavedReports(){const res=await fetch(`${API}/admin/reports/saved`,{headers:authHeaders()}),rows=await res.json(),box=document.getElementById('savedReportsList');box.innerHTML=rows.length?rows.map(r=>`<div class="saved-report-row"><div><strong>${esc(r.title)}</strong><div class="muted">Created by ${esc(r.created_by)} on ${new Date(r.created_at).toLocaleString()}</div></div><button class="btn small danger" onclick="deleteSavedReport(${r.id})">Delete saved report</button></div>`).join(''):'<div class="empty-state">No saved reports yet. Run an analysis and select “Save report”.</div>';}
+window.deleteSavedReport=async id=>{if(!confirm('Delete this saved report? Exam attempts and candidate results will not be affected.'))return;const res=await fetch(`${API}/admin/reports/saved/${id}`,{method:'DELETE',headers:authHeaders()}),data=await res.json();showAlert(data.detail||'Could not delete report',res.ok?'success':'error');if(res.ok)loadSavedReports();};
+
+// ---- Users ----
+let userRoleFilter = "";
+let usersCache = [];
+async function loadUsers() {
+  await ensureProgrammeFilters();
+  const url = new URL(`${API}/admin/users`, window.location.origin);
+  if (userRoleFilter) url.searchParams.set("role", userRoleFilter);
+  const pid=document.getElementById('userProgramFilter').value;if(pid)url.searchParams.set('training_program_id',pid);
+  const res = await fetch(url, { headers: authHeaders() });
+  const contentType = res.headers.get('content-type') || '';
+  const users = contentType.includes('application/json') ? await res.json() : null;
+  if (!res.ok || !Array.isArray(users)) {
+    showAlert(users?.detail || `Could not load users (HTTP ${res.status}). Restart the server and try again.`, 'error');
+    return;
+  }
+  usersCache = users;
+  const list = document.getElementById("usersList");
+  if (!users.length) { list.innerHTML = `<div class="empty-state">No users found.</div>`; return; }
+  list.innerHTML = `<table class="users-table"><thead><tr><th>Email</th><th>Surname</th><th>First name</th><th>Other name</th><th>Role</th><th>Status</th><th>Verified</th><th>Actions</th></tr></thead><tbody>
+    ${users.map(u => `<tr>
+      <td>${esc(u.email)}${u.candidate_number ? `<div class="muted" style="font-size:11px">${esc(u.candidate_number)}</div>` : ''}</td>
+      <td>${esc(u.surname || '')}</td><td>${esc(u.first_name || '')}</td><td>${esc(u.other_name || '')}</td>
+      <td><span class="badge blue">${u.role.replace('_',' ')}</span></td>
+      <td>${u.is_active ? '<span class="badge green">Active</span>' : '<span class="badge red">Deactivated</span>'}</td>
+      <td>${u.email_verified ? '<span class="badge green">Verified</span>' : '<span class="badge gray">Pending</span>'}</td>
+      <td><div class="users-row-actions">
+        ${u.role === 'candidate' ? `<button class="btn small secondary" onclick="downloadCandidateTag(${u.id})">Download tag</button><button class="btn small ghost" onclick="impersonateCandidate(${u.id}, '${esc(u.full_name)}')">Log in as</button>` : ''}
+        <button class="btn small ghost" onclick="editUserName(${u.id})">Edit name</button>
+        <button class="btn small ghost" onclick="resetUserPassword(${u.id})">Reset password</button>
+        <button class="btn small secondary" onclick="toggleUser(${u.id}, ${!u.is_active})">${u.is_active ? 'Deactivate' : 'Reactivate'}</button>
+        <button class="btn small danger" onclick="deleteUser(${u.id}, '${esc(u.email)}')">Delete</button>
+      </div></td>
+    </tr>`).join("")}
+  </tbody></table>`;
+}
+window.downloadCandidateTag = async function (userId) {
+  try {
+    const res = await fetch(`${API}/admin/candidates/${userId}/tag.pdf`, {headers: authHeaders()});
+    if (!res.ok) { const error = (res.headers.get('content-type') || '').includes('application/json') ? await res.json() : null; throw new Error(error?.detail || `Could not download candidate tag (HTTP ${res.status})`); }
+    const url = URL.createObjectURL(await res.blob());
+    const link = document.createElement('a');
+    link.href = url; link.download = `NIRPR-Candidate-Tag-${userId}.pdf`;
+    document.body.appendChild(link); link.click(); link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+  } catch (error) { showAlert(error.message, 'error'); }
+};
+window.editUserName = function (userId) {
+  const user = usersCache.find(item => item.id === userId);
+  if (!user) return;
+  openModal(`<h2 class="mt-0">Edit name</h2><p class="subtitle">Check the name parts carefully before issuing a candidate tag.</p>
+    <form id="editNameForm"><label>Surname</label><input id="editSurname" value="${esc(user.surname)}" required>
+    <label>First name</label><input id="editFirstName" value="${esc(user.first_name)}" required>
+    <label>Other name</label><input id="editOtherName" value="${esc(user.other_name || '')}">
+    <div class="row" style="margin-top:18px"><button class="btn" type="submit">Save name</button><button class="btn secondary" type="button" onclick="closeModal()">Cancel</button></div></form>`);
+  document.getElementById('editNameForm').onsubmit = async event => {
+    event.preventDefault();
+    const payload = {surname: document.getElementById('editSurname').value.trim(),
+      first_name: document.getElementById('editFirstName').value.trim(),
+      other_name: document.getElementById('editOtherName').value.trim()};
+    const res = await fetch(`${API}/admin/users/${userId}`, {method:'PATCH', headers:jsonHeaders(), body:JSON.stringify(payload)});
+    const data = (res.headers.get('content-type') || '').includes('application/json') ? await res.json() : null;
+    if (!res.ok || !data) return showAlert(data?.detail || `Could not update name (HTTP ${res.status}). Restart the server and try again.`, 'error');
+    closeModal(); showAlert('Name updated.', 'success'); loadUsers();
+  };
+};
+window.resetUserPassword = function (userId) {
+  const user = usersCache.find(item => item.id === userId);
+  if (!user) return;
+  openModal(`<h2 class="mt-0">Reset password</h2><p class="subtitle">Set a temporary password for ${esc(user.full_name)}. Their existing sessions will end, and they must change it at next login.</p>
+    <form id="resetUserPasswordForm"><label>New temporary password</label><input id="resetUserPasswordValue" type="password" minlength="8" required autocomplete="new-password">
+    <div class="row" style="margin-top:18px"><button class="btn" type="submit">Reset password</button><button class="btn secondary" type="button" onclick="closeModal()">Cancel</button></div></form>`);
+  document.getElementById('resetUserPasswordForm').onsubmit = async event => {
+    event.preventDefault();
+    const res = await fetch(`${API}/admin/users/${userId}/reset-password`, {method:'POST', headers:jsonHeaders(),
+      body:JSON.stringify({new_password:document.getElementById('resetUserPasswordValue').value})});
+    const data = await res.json();
+    if (!res.ok) return showAlert(data.detail || 'Password reset failed', 'error');
+    closeModal(); showAlert('Temporary password saved and hashed. Share it privately with the user.', 'success');
+  };
+};
+document.querySelectorAll("#userTabs button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("#userTabs button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    userRoleFilter = btn.dataset.role;
+    loadUsers();
+  });
+});
+document.getElementById('userProgramFilter').addEventListener('change',loadUsers);
+window.impersonateCandidate = async function (userId, name) {
+  if (!confirm(`View the platform as ${name}? You'll see exactly what they see. Exam-taking actions (starting, answering, submitting an exam) are disabled during this — it's for checking their experience, not acting on their behalf. This is logged.`)) return;
+  try {
+    const res = await fetch(`${API}/admin/impersonate/${userId}`, { method: "POST", headers: authHeaders() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Could not start impersonation");
+    // Stash the admin's own session so the candidate portal can offer "Switch back".
+    localStorage.setItem("nirpr_admin_token", token);
+    localStorage.setItem("nirpr_admin_role", role);
+    localStorage.setItem("nirpr_token", data.access_token);
+    localStorage.setItem("nirpr_role", data.user_role);
+    window.location.href = "/candidate";
+  } catch (err) { showAlert(err.message, "error"); }
+};
+
+window.toggleUser = async function (userId, newStatus) {
+  try {
+    const res = await fetch(`${API}/admin/users/${userId}`, { method: "PATCH", headers: jsonHeaders(), body: JSON.stringify({ is_active: newStatus }) });
+    if (!res.ok) throw new Error("Failed to update user");
+    loadUsers();
+  } catch (err) { showAlert(err.message, "error"); }
+};
+
+window.deleteUser = async function (userId, email) {
+  if (!confirm(`Permanently delete ${email}? This cannot be undone.`)) return;
+  try {
+    let res = await fetch(`${API}/admin/users/${userId}`, { method: "DELETE", headers: authHeaders() });
+    let data = await res.json();
+    if (!res.ok) {
+      if ((data.detail || "").includes("exam attempt")) {
+        if (confirm(`${data.detail}\n\nDelete anyway, along with all their exam history?`)) {
+          res = await fetch(`${API}/admin/users/${userId}?force=true`, { method: "DELETE", headers: authHeaders() });
+          data = await res.json();
+          if (!res.ok) throw new Error(data.detail || "Failed to delete user");
+        } else {
+          return;
+        }
+      } else {
+        throw new Error(data.detail || "Failed to delete user");
+      }
+    }
+    showAlert(data.detail || "User deleted.", "success");
+    loadUsers();
+  } catch (err) { showAlert(err.message, "error"); }
+};
+
+document.getElementById("importUsersBtn").addEventListener("click", () => {
+  openModal(`
+    <h2 class="mt-0">Import users from CSV</h2>
+    <p class="subtitle">Bulk-create candidate or staff accounts instead of adding them one by one. Not sure
+      of the format? <a href="#" onclick="downloadTemplate('users'); return false;">Download the template</a> first.</p>
+    <input type="file" id="uCsvFile" accept=".csv" required style="margin-bottom:10px;" />
+    <label style="display:flex; align-items:center; gap:8px; font-weight:400; font-size:13px;">
+      <input type="checkbox" id="uCsvSendEmail" checked style="width:auto;" />
+      Email each new user their login credentials
+    </label>
+    <div id="uCsvResult"></div>
+    <div class="row" style="margin-top:16px;">
+      <button type="button" class="btn secondary block" onclick="closeModal()">Cancel</button>
+      <button type="button" class="btn block" id="uCsvSubmitBtn">Upload &amp; import</button>
+    </div>
+  `);
+  document.getElementById("uCsvSubmitBtn").addEventListener("click", async () => {
+    const fileInput = document.getElementById("uCsvFile");
+    if (!fileInput.files.length) { showAlert("Please choose a CSV file first.", "error"); return; }
+    const btn = document.getElementById("uCsvSubmitBtn");
+    btn.disabled = true; btn.textContent = "Importing...";
+    try {
+      const sendEmail = document.getElementById("uCsvSendEmail").checked;
+      const fd = new FormData();
+      fd.append("file", fileInput.files[0]);
+      const res = await fetch(`${API}/admin/users/import-csv?send_email=${sendEmail}`, {
+        method: "POST", headers: authHeaders(), body: fd,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Import failed");
+      document.getElementById("uCsvResult").innerHTML = `
+        <div class="alert ${data.skipped ? 'warn' : 'success'}">
+          ${data.created} user(s) created${data.skipped ? `, ${data.skipped} row(s) skipped` : ''}.
+          ${data.errors.length ? '<ul style="margin:6px 0 0 18px; font-size:12px;">' + data.errors.map(e => `<li>${esc(e)}</li>`).join("") + '</ul>' : ''}
+        </div>`;
+      showAlert(`${data.created} user(s) imported.`, "success");
+      loadUsers();
+    } catch (err) {
+      showAlert(err.message, "error");
+    } finally {
+      btn.disabled = false; btn.textContent = "Upload & import";
+    }
+  });
+});
+
+document.getElementById("newStaffBtn").addEventListener("click", () => {
+  openModal(`
+    <h2 class="mt-0">New staff account</h2>
+    <form id="staffForm">
+      <div class="grid cols-2"><div><label>Surname</label><input id="sSurname" required /></div><div><label>First name</label><input id="sFirstName" required /></div></div>
+      <label>Other name</label><input id="sOtherName" />
+      <label>Email address</label><input type="email" id="sEmail" required />
+      <label>Temporary password</label><input type="password" id="sPassword" required minlength="8" />
+      <label>Role</label>
+      <select id="sRole">
+        <option value="examiner">Examiner (can grade &amp; approve)</option>
+        <option value="admin">Admin (full management)</option>
+        <option value="super_admin">Super Admin</option>
+      </select>
+      <div class="row" style="margin-top:20px;">
+        <button type="button" class="btn secondary block" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn block">Create account</button>
+      </div>
+    </form>
+  `);
+  document.getElementById("staffForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(`${API}/admin/users`, {
+        method: "POST", headers: jsonHeaders(),
+        body: JSON.stringify({
+          email: document.getElementById("sEmail").value.trim(),
+          password: document.getElementById("sPassword").value,
+          surname: document.getElementById("sSurname").value.trim(),
+          first_name: document.getElementById("sFirstName").value.trim(),
+          other_name: document.getElementById("sOtherName").value.trim(),
+          full_name: ["sFirstName", "sOtherName", "sSurname"].map(id => document.getElementById(id).value.trim()).filter(Boolean).join(" "),
+          role: document.getElementById("sRole").value,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Failed to create account");
+      closeModal(); showAlert("Staff account created.", "success"); loadUsers();
+    } catch (err) { showAlert(err.message, "error"); }
+  });
+});
+
+document.getElementById("newCandidateBtn").addEventListener("click", async () => {
+  if (!programsCache.length) {
+    const res = await fetch(`${API}/training-programs`, { headers: authHeaders() });
+    programsCache = await res.json();
+  }
+  openModal(`
+    <h2 class="mt-0">Add candidate</h2>
+    <p class="subtitle">Creates the account directly — no email verification step required. The candidate is emailed their login credentials.</p>
+    <form id="candidateForm">
+      <div class="grid cols-2"><div><label>Surname</label><input id="cSurname" required /></div><div><label>First name</label><input id="cFirstName" required /></div></div>
+      <label>Other name</label><input id="cOtherName" />
+      <label>Email address</label><input type="email" id="cEmail" required />
+      <label for="cPassword">Temporary password</label>
+      <div class="password-field">
+        <input type="password" id="cPassword" required minlength="8" autocomplete="new-password" value="${Math.random().toString(36).slice(-10)}Aa1" />
+        <button type="button" class="password-toggle" data-password-target="cPassword" aria-label="Show temporary password" aria-pressed="false"></button>
+      </div>
+      <label>Training programme</label>
+      <select id="cProgram" required>${programsCache.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join("")}</select>
+      <label>Institution / facility</label><input id="cInstitution" />
+      <label>Qualification</label><input id="cQualification" placeholder="e.g. Radiographer, Medical Physicist" />
+      <div class="row" style="margin-top:20px;">
+        <button type="button" class="btn secondary block" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn block">Add candidate</button>
+      </div>
+    </form>
+  `);
+  initPasswordToggles(document.getElementById("candidateForm"));
+  document.getElementById("candidateForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(`${API}/admin/users`, {
+        method: "POST", headers: jsonHeaders(),
+        body: JSON.stringify({
+          email: document.getElementById("cEmail").value.trim(),
+          password: document.getElementById("cPassword").value,
+          surname: document.getElementById("cSurname").value.trim(),
+          first_name: document.getElementById("cFirstName").value.trim(),
+          other_name: document.getElementById("cOtherName").value.trim(),
+          full_name: ["cFirstName", "cOtherName", "cSurname"].map(id => document.getElementById(id).value.trim()).filter(Boolean).join(" "),
+          role: "candidate",
+          training_program_id: parseInt(document.getElementById("cProgram").value),
+          institution: document.getElementById("cInstitution").value.trim(),
+          qualification: document.getElementById("cQualification").value.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Failed to add candidate");
+      closeModal(); showAlert("Candidate added — credentials emailed to them.", "success"); loadUsers();
+    } catch (err) { showAlert(err.message, "error"); }
+  });
+});
+
+window.editExamPolicy = async function(examId) {
+  const res=await fetch(`${API}/exams/${examId}/policy`,{headers:authHeaders()}), p=await res.json();
+  const checks=[['allow_resume','Allow interrupted candidates to resume'],['allow_previous','Show a Previous Question button'],['allow_revisit','Allow candidates to revisit answered questions'],['sequential','Deliver questions in a fixed sequence'],['allow_skip','Allow candidates to skip unanswered questions'],['unanswered_zero','Score unanswered questions as zero'],['random_question_selection','Give each candidate a randomized question set'],['random_option_order','Randomize answer-option order'],['require_fullscreen','Require full-screen examination mode'],['block_clipboard','Block copying, cutting and pasting'],['block_printing','Block printing and print-screen shortcuts'],['snapshot_questions','Preserve the exact questions delivered to each candidate']];
+  openModal(`<div class="dashboard-hero" style="margin:-24px -24px 20px;border-radius:10px 10px 0 0"><div><span class="eyebrow">Exam configuration</span><h2 style="font-size:24px;margin:4px 0">Delivery & security rules</h2><p>Control navigation, question selection, scoring, payments and invigilation.</p></div></div><form id="policyForm"><div class="grid cols-2">${checks.map(([k,l])=>`<label style="display:flex;gap:9px;align-items:flex-start;padding:11px;border:1px solid var(--border);border-radius:9px;margin:0"><input type="checkbox" style="width:auto;margin-top:3px" id="pol_${k}" ${p[k]?'checked':''}><span>${l}</span></label>`).join('')}</div><div class="grid cols-2" style="margin-top:18px"><div><label>Marks deducted for each wrong answer</label><input type="number" step="0.25" min="0" id="pol_negative_marking" value="${p.negative_marking||0}"><small class="muted">Use 0 to disable negative marking.</small></div><div><label>Tab switches allowed before high-risk flag</label><input type="number" min="0" id="pol_max_tab_switches" value="${p.max_tab_switches??3}"><small class="muted">This flags an attempt for review; it does not fail the candidate.</small></div></div><label>Questions required from each topic (JSON)</label><textarea id="pol_topic_distribution" placeholder='{"Dosimetry": 10, "Regulation": 5}'>${esc(JSON.stringify(p.topic_distribution||{},null,2))}</textarea><div class="row" style="margin-top:18px"><button class="btn block">Save delivery & security rules</button><button type="button" class="btn secondary block" onclick="closeModal()">Cancel without saving</button></div></form>`);
+  document.getElementById('policyForm').onsubmit=async e=>{e.preventDefault();const payload={};checks.forEach(([k])=>payload[k]=document.getElementById(`pol_${k}`).checked);payload.negative_marking=Number(document.getElementById('pol_negative_marking').value);payload.max_tab_switches=Number(document.getElementById('pol_max_tab_switches').value);try{payload.topic_distribution=JSON.parse(document.getElementById('pol_topic_distribution').value||'{}')}catch(_){showAlert('Topic distribution must be valid JSON','error');return;}const save=await fetch(`${API}/exams/${examId}/policy`,{method:'PUT',headers:jsonHeaders(),body:JSON.stringify(payload)});const data=await save.json();if(!save.ok){showAlert(data.detail||'Could not save rules','error');return;}closeModal();showAlert('Exam delivery rules saved.','success');};
+};
+
+const governancePageSize = 10;
+const governanceRows = {payments: [], access: []};
+const governancePage = {payments: 1, access: 1};
+function governanceMatches(row, query) {
+  const words = query.toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
+  const content = Object.values(row).filter(value => value != null).join(' ').toLocaleLowerCase();
+  return words.every(word => content.includes(word));
+}
+function renderGovernancePage(kind) {
+  const isPayment = kind === 'payments';
+  const search = document.getElementById(isPayment ? 'paymentSearch' : 'accessSearch').value;
+  const rows = governanceRows[kind].filter(row => governanceMatches(row, search));
+  const pages = Math.max(1, Math.ceil(rows.length / governancePageSize));
+  governancePage[kind] = Math.min(Math.max(1, governancePage[kind]), pages);
+  const page = governancePage[kind];
+  const shown = rows.slice((page - 1) * governancePageSize, page * governancePageSize);
+  const list = document.getElementById(isPayment ? 'paymentReviewList' : 'examAccessList');
+  if (isPayment) {
+    list.innerHTML = shown.length ? `<table class="governance-record-table"><thead><tr><th>Candidate</th><th>Exam</th><th>Uploaded document</th><th>Reference</th><th>Uploaded</th><th>Actions</th></tr></thead><tbody>${shown.map(paymentRow).join('')}</tbody></table>` : '<div class="empty-state">No matching payment receipts.</div>';
+  } else {
+    list.innerHTML = shown.length ? `<table class="governance-record-table"><thead><tr><th>Candidate</th><th>Programme</th><th>Exam</th><th>Receipt</th><th>Access</th><th>Admin action</th></tr></thead><tbody>${shown.map(a=>`<tr><td>${esc(a.candidate)}<div class="muted">${esc(a.email)}</div></td><td>${esc(a.programme)}</td><td>${esc(a.exam)}</td><td><span class="badge ${a.receipt_status==='approved'?'green':a.receipt_status==='rejected'?'red':'gold'}">${esc(a.receipt_status.replaceAll('_',' '))}</span></td><td><span class="badge ${a.can_start?'green':'gray'}">${a.has_started?'Started':a.admin_granted?'Admin granted':a.receipt_status==='approved'?'Payment approved':'Blocked'}</span></td><td>${a.has_started?'<span class="muted">Attempt already started</span>':`<button class="btn small ${a.admin_granted?'danger':'secondary'}" onclick="setExamAccess(${a.user_id},${a.exam_id},${!a.admin_granted})">${a.admin_granted?'Revoke admin access':'Grant access'}</button>`}</td></tr>`).join('')}</tbody></table>` : '<div class="empty-state">No matching candidate exam access records.</div>';
+  }
+  document.getElementById(isPayment ? 'paymentPagination' : 'accessPagination').innerHTML = `<span>${rows.length ? `${(page-1)*governancePageSize+1}–${Math.min(page*governancePageSize,rows.length)} of ${rows.length}` : '0 records'}</span><div class="row"><button class="btn small secondary" type="button" aria-label="Previous page" onclick="changeGovernancePage('${kind}',-1)" ${page===1?'disabled':''}>&larr;</button><span>Page ${page} of ${pages}</span><button class="btn small secondary" type="button" aria-label="Next page" onclick="changeGovernancePage('${kind}',1)" ${page===pages?'disabled':''}>&rarr;</button></div>`;
+}
+window.changeGovernancePage = (kind, step) => { governancePage[kind] += step; renderGovernancePage(kind); };
+for (const [id, kind] of [['paymentSearch','payments'],['accessSearch','access']]) {
+  document.getElementById(id).addEventListener('input', () => { governancePage[kind] = 1; renderGovernancePage(kind); });
+}
+async function loadGovernance(){
+  await ensureProgrammeFilters();
+  loadLoginApprovals(); loadMfaStatus(); loadTagSignatureStatus();
+  const paymentProgramme = document.getElementById('paymentProgramFilter').value;
+  const accessProgramme = document.getElementById('accessProgramFilter').value;
+  const [pr, ar, xr] = await Promise.all([
+    fetch(`${API}/admin/payments${paymentProgramme?`?training_program_id=${paymentProgramme}`:''}`, {headers:authHeaders()}),
+    fetch(`${API}/admin/appeals`, {headers:authHeaders()}),
+    fetch(`${API}/admin/exam-access${accessProgramme?`?training_program_id=${accessProgramme}`:''}`, {headers:authHeaders()})
+  ]);
+  const [payments, appeals, accessRows] = await Promise.all([pr.json(), ar.json(), xr.json()]);
+  governanceRows.payments = pr.ok && Array.isArray(payments) ? payments : [];
+  governanceRows.access = xr.ok && Array.isArray(accessRows) ? accessRows : [];
+  renderGovernancePage('payments'); renderGovernancePage('access');
+  if (!pr.ok) document.getElementById('paymentReviewList').innerHTML = `<div class="alert error">${esc(payments.detail || 'Payment receipts could not be loaded.')}</div>`;
+  if (!xr.ok) document.getElementById('examAccessList').innerHTML = `<div class="alert error">${esc(accessRows.detail || 'Candidate exam access could not be loaded.')}</div>`;
+  document.getElementById('appealReviewList').innerHTML=!ar.ok?`<div class="alert error">${esc(appeals.detail||'Appeals could not be loaded. Please refresh or sign in again.')}</div>`:appeals.length?`<table><thead><tr><th>Submitted</th><th>Candidate</th><th>Exam</th><th>Reason</th><th>Status</th><th>Action</th></tr></thead><tbody>${appeals.map(a=>`<tr><td>${new Date(a.submitted_at).toLocaleString()}</td><td>${esc(a.candidate)}</td><td>${esc(a.exam)}</td><td>${esc(a.reason)}</td><td><span class="badge ${['approved','upheld'].includes(a.status)?'green':a.status==='dismissed'?'red':'gold'}">${esc(a.status==='upheld'?'approved':a.status.replaceAll('_',' '))}</span></td><td>${['approved','upheld','dismissed'].includes(a.status)?`<span class="muted">Reviewed</span>`:`<button class="btn small" onclick="reviewAppeal(${a.id},'approved')">Approve appeal</button> <button class="btn small danger" onclick="reviewAppeal(${a.id},'dismissed')">Dismiss appeal</button>`}</td></tr>`).join('')}</tbody></table>`:'<p class="muted">No submitted appeals.</p>';
+}
+document.getElementById('paymentProgramFilter').addEventListener('change',()=>{governancePage.payments=1;loadGovernance();});
+document.getElementById('accessProgramFilter').addEventListener('change',()=>{governancePage.access=1;loadGovernance();});
+async function loadLoginApprovals(){const list=document.getElementById('loginApprovalList'),res=await fetch(`${API}/admin/staff-login-approvals`,{headers:authHeaders()});if(res.status===403){list.innerHTML='<div class="alert info">Login approval decisions are visible only to the superior super-administrator account.</div>';return;}const items=await res.json();list.innerHTML=items.length?`<table><thead><tr><th>Staff</th><th>Requested</th><th>Address</th><th>Status</th><th>Decision</th></tr></thead><tbody>${items.map(a=>`<tr><td>${esc(a.staff_name)}<div class="muted">${esc(a.email)}</div></td><td>${new Date(a.requested_at).toLocaleString()}</td><td>${esc(a.ip_address||'—')}</td><td><span class="badge ${a.status==='approved'?'green':a.status==='rejected'?'red':a.status==='pending'?'gold':'gray'}">${a.status}</span></td><td>${a.status==='pending'?`<button class="btn small" onclick="decideStaffLogin('${a.id}','approved')">Approve</button> <button class="btn small danger" onclick="decideStaffLogin('${a.id}','rejected')">Reject</button>`:esc((a.authority||'').replaceAll('_',' '))}</td></tr>`).join('')}</tbody></table>`:'<p class="muted">No staff login requests.</p>';}
+window.decideStaffLogin=async(id,decision)=>{const authority=prompt('Enter approving authority: head_of_ict or general_manager','head_of_ict');if(!['head_of_ict','general_manager'].includes(authority))return showAlert('Authority must be head_of_ict or general_manager.','error');const notes=prompt('Decision notes (optional):')||'';const res=await fetch(`${API}/admin/staff-login-approvals/${id}`,{method:'PATCH',headers:jsonHeaders(),body:JSON.stringify({decision,authority,notes})}),data=await res.json();showAlert(data.detail||'Could not decide request',res.ok?'success':'error');if(res.ok)loadLoginApprovals();};
+window.reviewPayment=async(id,status)=>{const notes=prompt('Review note (optional):')||'';const res=await fetch(`${API}/admin/payments/${id}`,{method:'PATCH',headers:jsonHeaders(),body:JSON.stringify({status,notes})}),data=await res.json();if(!res.ok){showAlert(data.detail||'Could not review receipt.','error');return;}closeModal();showAlert(data.detail,'success');loadGovernance();loadDashboard();};
+window.setExamAccess=async(userId,examId,granted)=>{const action=granted?'grant':'revoke';if(!confirm(`${action[0].toUpperCase()+action.slice(1)} administrative exam access for this candidate?`))return;const res=await fetch(`${API}/admin/exam-access`,{method:'PUT',headers:jsonHeaders(),body:JSON.stringify({user_id:userId,exam_id:examId,granted})}),data=await res.json();showAlert(data.detail||'Could not update exam access',res.ok?'success':'error');if(res.ok)loadGovernance();};
+window.reviewAppeal=async(id,status)=>{const approving=status==='approved';if(approving&&!confirm('Approve this appeal and grant the candidate one additional exam attempt?'))return;const resolution=prompt(approving?'Enter the approval note shown to the candidate:':'Enter the reason for dismissing this appeal:');if(!resolution)return;const res=await fetch(`${API}/admin/appeals/${id}`,{method:'PATCH',headers:jsonHeaders(),body:JSON.stringify({status,resolution})}),data=await res.json();showAlert(data.detail||'Could not review appeal',res.ok?'success':'error');if(res.ok)loadGovernance();};
+document.getElementById('notifyForm').onsubmit=async e=>{e.preventDefault();const res=await fetch(`${API}/admin/notifications`,{method:'POST',headers:jsonHeaders(),body:JSON.stringify({title:document.getElementById('notifyTitle').value,message:document.getElementById('notifyMessage').value,user_ids:[]})});showAlert(res.ok?'Notification queued for candidates.':'Could not create notification',res.ok?'success':'error');};
+document.getElementById('signatureForm').onsubmit=async e=>{e.preventDefault();const programmeId=document.getElementById('signatureProgram').value;if(!programmeId)return showAlert('Select a training programme.','error');const fd=new FormData();fd.append('signatory_name',document.getElementById('signatoryName').value);fd.append('title',document.getElementById('signatoryTitle').value);fd.append('file',document.getElementById('signatureFile').files[0]);const res=await fetch(`${API}/admin/programmes/${programmeId}/signatures/${document.getElementById('signatureRole').value}`,{method:'POST',headers:{Authorization:`Bearer ${token}`},body:fd});const data=await res.json();showAlert(data.detail||'Could not upload signature',res.ok?'success':'error');if(res.ok){document.getElementById('signatureForm').reset();document.getElementById('signatureProgram').value=programmeId;loadSignatureStatus();}};
+let programmeSignaturesCache = [];
+async function loadSignatureStatus() {
+  const programmeId = document.getElementById('signatureProgram').value;
+  const box = document.getElementById('signatureStatus');
+  if (!programmeId) { box.innerHTML = ''; programmeSignaturesCache = []; return; }
+  const res = await fetch(`${API}/admin/programmes/${programmeId}/signatures`, {headers:authHeaders()});
+  const rows = await res.json();
+  if (!res.ok) { box.innerHTML = `<div class="alert error">${esc(rows.detail || 'Could not load programme signatures.')}</div>`; return; }
+  programmeSignaturesCache = rows;
+  box.innerHTML = rows.length ? `<div class="signature-table-scroll"><table class="signature-table"><thead><tr><th>Training programme / course</th><th>Certification role</th><th>Signatory</th><th>Official title</th><th>Last uploaded</th><th>Actions</th></tr></thead><tbody>${rows.map(s => `<tr><td><strong>${esc(s.programme_name)}</strong><div class="muted" style="font-size:11px">${esc(s.programme_code)}</div></td><td>${esc(s.role_key.replaceAll('_',' ').replace(/\b\w/g,c=>c.toUpperCase()))}</td><td>${esc(s.signatory_name)}</td><td>${esc(s.title)}</td><td>${new Date(s.uploaded_at).toLocaleString()}</td><td><div class="signature-actions"><button class="btn small ghost" onclick="viewProgrammeSignature(${s.id})">View</button><button class="btn small secondary" onclick="editProgrammeSignature(${s.id})">Edit</button><button class="btn small danger" onclick="deleteProgrammeSignature(${s.id})">Delete</button></div></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty-state">No signatures uploaded for this programme.</div>';
+}
+async function programmeSignatureImageUrl(programmeId, signatureId) {
+  const res = await fetch(`${API}/admin/programmes/${programmeId}/signatures/${signatureId}/image`, {headers:authHeaders()});
+  if (!res.ok) { const error = await res.json().catch(() => ({})); throw new Error(error.detail || 'Could not load signature image'); }
+  const blob = await res.blob();
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('Could not display the uploaded image'));
+    reader.readAsDataURL(blob);
+  });
+}
+window.viewProgrammeSignature = async signatureId => {
+  const signature = programmeSignaturesCache.find(s => s.id === signatureId);
+  if (!signature) return;
+  const programmeId = document.getElementById('signatureProgram').value;
+  try {
+    const url = await programmeSignatureImageUrl(programmeId, signatureId);
+    openModal(`<h2 class="mt-0">Uploaded certificate signature</h2><p class="subtitle">${esc(signature.programme_name)} · ${esc(signature.role_key.replaceAll('_',' '))}<br>${esc(signature.signatory_name)} · ${esc(signature.title)}</p><p class="muted">The entire saved image is shown below. Use Actual size to inspect small details, or Extract signature to select only the handwriting.</p><div class="signature-viewer-controls"><button id="signatureFitButton" class="btn small secondary" type="button">Actual size</button><button id="signatureExtractButton" class="btn small" type="button">Extract signature</button><a class="btn small secondary" href="${url}" download="programme-signature-original">Download original</a><button class="btn small secondary" type="button" onclick="closeModal()">Close</button></div><div id="signatureImageStage" class="signature-image-stage"><img id="signatureFullImage" src="${url}" alt="Entire uploaded signature image"></div><div id="signatureCropPane" class="hidden"><p class="muted">Drag across the image to select the handwritten signature. The selected area will replace this certificate signature image.</p><div class="signature-image-stage"><canvas id="signatureCropCanvas" aria-label="Select signature area"></canvas></div><div class="signature-viewer-controls"><button id="signatureSaveCrop" class="btn" type="button" disabled>Save extracted signature</button><button id="signatureCancelCrop" class="btn small secondary" type="button">Cancel</button></div></div>`);
+    document.getElementById('modalContent').classList.add('signature-viewer-modal');
+    document.getElementById('signatureFitButton').onclick = event => {
+      const stage = document.getElementById('signatureImageStage');
+      const actual = stage.classList.toggle('actual-size');
+      event.currentTarget.textContent = actual ? 'Fit entire image' : 'Actual size';
+    };
+    document.getElementById('signatureExtractButton').onclick = () => startSignatureCrop(url, async blob => {
+      const form = new FormData();
+      form.append('signatory_name', signature.signatory_name);
+      form.append('title', signature.title);
+      form.append('file', blob, 'extracted-signature.png');
+      const res = await fetch(`${API}/admin/programmes/${programmeId}/signatures/${signature.id}`, {method:'PATCH',headers:authHeaders(),body:form});
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(result.detail || 'Could not save extracted certificate signature');
+      loadSignatureStatus();
+    });
+  } catch (error) { showAlert(error.message, 'error'); }
+};
+async function startSignatureCrop(url, saveCrop) {
+  const source = new Image();
+  source.src = url;
+  try { await source.decode(); } catch (_) { return showAlert('Could not read the uploaded image.', 'error'); }
+  document.getElementById('signatureImageStage').classList.add('hidden');
+  document.getElementById('signatureCropPane').classList.remove('hidden');
+  document.getElementById('signatureExtractButton').classList.add('hidden');
+  const canvas = document.getElementById('signatureCropCanvas');
+  const scale = Math.min(1, 2000 / Math.max(source.naturalWidth, source.naturalHeight));
+  canvas.width = Math.max(1, Math.round(source.naturalWidth * scale));
+  canvas.height = Math.max(1, Math.round(source.naturalHeight * scale));
+  const context = canvas.getContext('2d');
+  let start = null, selection = null;
+  const point = event => {
+    const rect = canvas.getBoundingClientRect();
+    return {x:Math.max(0,Math.min(canvas.width,(event.clientX-rect.left)*canvas.width/rect.width)), y:Math.max(0,Math.min(canvas.height,(event.clientY-rect.top)*canvas.height/rect.height))};
+  };
+  const draw = () => {
+    context.clearRect(0,0,canvas.width,canvas.height);
+    context.drawImage(source,0,0,canvas.width,canvas.height);
+    if (selection) {
+      const x=Math.min(selection.x1,selection.x2), y=Math.min(selection.y1,selection.y2);
+      const w=Math.abs(selection.x2-selection.x1), h=Math.abs(selection.y2-selection.y1);
+      context.fillStyle='rgba(18,111,112,.18)'; context.fillRect(x,y,w,h);
+      context.strokeStyle='#126f70'; context.lineWidth=Math.max(2,canvas.width/600); context.strokeRect(x,y,w,h);
+    }
+  };
+  draw();
+  canvas.onpointerdown = event => { event.preventDefault(); canvas.setPointerCapture(event.pointerId); start=point(event); selection={x1:start.x,y1:start.y,x2:start.x,y2:start.y}; draw(); };
+  canvas.onpointermove = event => { if (!start) return; const end=point(event); selection.x2=end.x;selection.y2=end.y;draw(); };
+  canvas.onpointerup = event => { if (!start) return; const end=point(event);selection.x2=end.x;selection.y2=end.y;start=null;draw();document.getElementById('signatureSaveCrop').disabled=Math.abs(selection.x2-selection.x1)<8||Math.abs(selection.y2-selection.y1)<5; };
+  canvas.onpointercancel = () => { start=null; };
+  document.getElementById('signatureCancelCrop').onclick = () => {
+    document.getElementById('signatureCropPane').classList.add('hidden');
+    document.getElementById('signatureImageStage').classList.remove('hidden');
+    document.getElementById('signatureExtractButton').classList.remove('hidden');
+  };
+  document.getElementById('signatureSaveCrop').onclick = async () => {
+    if (!selection) return;
+    const x=Math.min(selection.x1,selection.x2)*source.naturalWidth/canvas.width;
+    const y=Math.min(selection.y1,selection.y2)*source.naturalHeight/canvas.height;
+    const width=Math.abs(selection.x2-selection.x1)*source.naturalWidth/canvas.width;
+    const height=Math.abs(selection.y2-selection.y1)*source.naturalHeight/canvas.height;
+    const output=document.createElement('canvas');
+    output.width=Math.max(1,Math.round(width));output.height=Math.max(1,Math.round(height));
+    output.getContext('2d').drawImage(source,x,y,width,height,0,0,output.width,output.height);
+    const blob=await new Promise(resolve=>output.toBlob(resolve,'image/png'));
+    if (!blob) return showAlert('Could not extract the selected image area.', 'error');
+    const saveButton=document.getElementById('signatureSaveCrop');saveButton.disabled=true;
+    try {
+      await saveCrop(blob);
+      closeModal();showAlert('Extracted signature saved.','success');
+    } catch (error) { saveButton.disabled=false;showAlert(error.message,'error'); }
+  };
+}
+window.editProgrammeSignature = async signatureId => {
+  const signature = programmeSignaturesCache.find(s => s.id === signatureId);
+  if (!signature) return;
+  const programmeId = document.getElementById('signatureProgram').value;
+  try {
+    const url = await programmeSignatureImageUrl(programmeId, signatureId);
+    openModal(`<h2 class="mt-0">Edit programme signature</h2><p class="subtitle">${esc(signature.programme_name)} · ${esc(signature.role_key.replaceAll('_',' '))}</p><img src="${url}" alt="Current uploaded signature" style="display:block;max-width:100%;max-height:180px;width:auto;height:auto;margin:12px auto;border:1px solid var(--border);border-radius:8px"><form id="editProgrammeSignatureForm"><label>Signatory name</label><input name="signatory_name" value="${esc(signature.signatory_name)}" required><label>Official title</label><input name="title" value="${esc(signature.title)}" required><label>Replace picture (optional)</label><input name="file" type="file" accept=".png,.jpg,.jpeg"><p class="muted">Leave the file empty to keep the exact picture currently shown.</p><div class="row" style="margin-top:16px"><button class="btn">Save changes</button><button class="btn secondary" type="button" onclick="closeModal()">Cancel</button></div></form>`);
+    document.getElementById('editProgrammeSignatureForm').onsubmit = async event => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const data = new FormData();
+      data.append('signatory_name', form.elements.signatory_name.value.trim());
+      data.append('title', form.elements.title.value.trim());
+      if (form.elements.file.files[0]) data.append('file', form.elements.file.files[0]);
+      const res = await fetch(`${API}/admin/programmes/${programmeId}/signatures/${signatureId}`, {method:'PATCH',headers:authHeaders(),body:data});
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok) return showAlert(result.detail || 'Could not update signature', 'error');
+      closeModal(); showAlert(result.detail, 'success'); loadSignatureStatus();
+    };
+  } catch (error) { showAlert(error.message, 'error'); }
+};
+window.deleteProgrammeSignature = async signatureId => {
+  const signature = programmeSignaturesCache.find(s => s.id === signatureId);
+  if (!signature || !confirm(`Delete the ${signature.role_key.replaceAll('_',' ')} signature for ${signature.programme_name}?`)) return;
+  const programmeId = document.getElementById('signatureProgram').value;
+  const res = await fetch(`${API}/admin/programmes/${programmeId}/signatures/${signatureId}`, {method:'DELETE',headers:authHeaders()});
+  const result = await res.json().catch(() => ({}));
+  if (!res.ok) return showAlert(result.detail || 'Could not delete signature', 'error');
+  showAlert(result.detail, 'success'); loadSignatureStatus();
+};
+document.getElementById('signatureProgram').addEventListener('change',loadSignatureStatus);
+let candidateTagSignature = null;
+async function loadTagSignatureStatus() {
+  const box = document.getElementById('tagSignatureStatus');
+  const res = await fetch(`${API}/admin/candidate-tag-signature`, {headers:authHeaders()});
+  const record = await res.json().catch(() => null);
+  if (!res.ok) { box.innerHTML = '<div class="alert error">Could not load candidate tag signature.</div>'; return; }
+  candidateTagSignature = record;
+  document.getElementById('tagSignatureFile').required = !record;
+  if (!record) { box.innerHTML = '<div class="empty-state">No candidate tag signature is saved. Tag downloads will remain unavailable until one is uploaded.</div>'; return; }
+  document.getElementById('tagSignatoryName').value = record.signatory_name;
+  document.getElementById('tagSignatoryTitle').value = record.title;
+  box.innerHTML = `<div class="row between wrap"><div><strong>${esc(record.signatory_name)}</strong><div class="muted">${esc(record.title)} · Uploaded ${new Date(record.uploaded_at).toLocaleString()}</div></div><div class="row wrap"><button class="btn small secondary" type="button" onclick="viewCandidateTagSignature()">View image</button><button class="btn small danger" type="button" onclick="deleteCandidateTagSignature()">Delete tag signature</button></div></div><p class="muted" style="margin-top:10px">To change the name or title, edit the fields above and save. Select a new picture only when replacing the image.</p>`;
+}
+document.getElementById('tagSignatureForm').onsubmit = async event => {
+  event.preventDefault();
+  const file = document.getElementById('tagSignatureFile').files[0];
+  if (!candidateTagSignature && !file) return showAlert('Select a signature picture.', 'error');
+  const data = new FormData();
+  data.append('signatory_name', document.getElementById('tagSignatoryName').value.trim());
+  data.append('title', document.getElementById('tagSignatoryTitle').value.trim());
+  if (file) data.append('file', file);
+  const res = await fetch(`${API}/admin/candidate-tag-signature`, {method:'PUT',headers:authHeaders(),body:data});
+  const result = await res.json().catch(() => ({}));
+  if (!res.ok) return showAlert(result.detail || 'Could not save candidate tag signature', 'error');
+  document.getElementById('tagSignatureFile').value = '';
+  showAlert(result.detail, 'success'); loadTagSignatureStatus();
+};
+window.viewCandidateTagSignature = async () => {
+  const record = candidateTagSignature;
+  if (!record) return;
+  try {
+    const res = await fetch(`${API}/admin/candidate-tag-signature/image`, {headers:authHeaders()});
+    if (!res.ok) { const error = await res.json().catch(() => ({})); throw new Error(error.detail || 'Could not load tag signature image'); }
+    const blob = await res.blob();
+    const url = await new Promise((resolve, reject) => { const reader=new FileReader(); reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(new Error('Could not display tag signature'));reader.readAsDataURL(blob); });
+    openModal(`<h2 class="mt-0">Candidate tag signature</h2><p class="subtitle">${esc(record.signatory_name)} · ${esc(record.title)}</p><p class="muted">This is the single signature used on every candidate tag.</p><div class="signature-viewer-controls"><button id="signatureFitButton" class="btn small secondary" type="button">Actual size</button><button id="signatureExtractButton" class="btn small" type="button">Extract signature</button><a class="btn small secondary" href="${url}" download="candidate-tag-signature-original">Download original</a><button class="btn small secondary" type="button" onclick="closeModal()">Close</button></div><div id="signatureImageStage" class="signature-image-stage"><img src="${url}" alt="Entire candidate tag signature image"></div><div id="signatureCropPane" class="hidden"><p class="muted">Drag across the image to select the handwriting. Saving replaces the candidate tag signature.</p><div class="signature-image-stage"><canvas id="signatureCropCanvas" aria-label="Select signature area"></canvas></div><div class="signature-viewer-controls"><button id="signatureSaveCrop" class="btn" type="button" disabled>Save extracted signature</button><button id="signatureCancelCrop" class="btn small secondary" type="button">Cancel</button></div></div>`);
+    document.getElementById('modalContent').classList.add('signature-viewer-modal');
+    document.getElementById('signatureFitButton').onclick = event => { const stage=document.getElementById('signatureImageStage');const actual=stage.classList.toggle('actual-size');event.currentTarget.textContent=actual?'Fit entire image':'Actual size'; };
+    document.getElementById('signatureExtractButton').onclick = () => startSignatureCrop(url, async cropped => {
+      const data=new FormData();data.append('signatory_name',record.signatory_name);data.append('title',record.title);data.append('file',cropped,'extracted-tag-signature.png');
+      const save=await fetch(`${API}/admin/candidate-tag-signature`,{method:'PUT',headers:authHeaders(),body:data});
+      const result=await save.json().catch(()=>({}));
+      if (!save.ok) throw new Error(result.detail||'Could not save extracted tag signature');
+      loadTagSignatureStatus();
+    });
+  } catch (error) { showAlert(error.message, 'error'); }
+};
+window.deleteCandidateTagSignature = async () => {
+  if (!candidateTagSignature || !confirm('Delete the candidate tag signature? New tag downloads will be unavailable until another is uploaded.')) return;
+  const res=await fetch(`${API}/admin/candidate-tag-signature`,{method:'DELETE',headers:authHeaders()});
+  const result=await res.json().catch(()=>({}));
+  if (!res.ok) return showAlert(result.detail||'Could not delete candidate tag signature','error');
+  candidateTagSignature=null;
+  document.getElementById('tagSignatoryName').value='';document.getElementById('tagSignatoryTitle').value='';document.getElementById('tagSignatureFile').value='';
+  showAlert(result.detail,'success');loadTagSignatureStatus();
+};
+
+async function loadMfaStatus(){const box=document.getElementById('mfaSecurityControl'),res=await fetch(`${API}/auth/mfa/status`,{headers:authHeaders()});if(!res.ok){box.innerHTML='<div class="alert error">Could not load two-factor authentication status.</div>';return;}const data=await res.json();box.innerHTML=data.enabled?'<div class="row between"><div><span class="badge green">2FA enabled</span><p class="muted">Authenticator verification is active for this staff account.</p></div><button class="btn danger" onclick="disableMfa()">Disable 2FA</button></div>':'<div class="row between"><div><span class="badge gray">2FA not enabled</span><p class="muted">Protect this account with an authenticator application.</p></div><button class="btn" onclick="setupMfa()">Set up 2FA</button></div>';}
+window.setupMfa=async()=>{const res=await fetch(`${API}/auth/mfa/setup`,{method:'POST',headers:authHeaders()}),data=await res.json();if(!res.ok)return showAlert(data.detail||'Could not start 2FA setup','error');openModal(`<h2>Set up authenticator two-factor authentication</h2><p>Scan this QR code with Google Authenticator, Microsoft Authenticator, Authy, or another TOTP app.</p><img src="${data.qr_code_data_url}" alt="Authenticator setup QR code" style="display:block;width:220px;height:220px;margin:16px auto;border:10px solid #fff"><label>Manual setup key</label><input value="${esc(data.secret)}" readonly><label>Enter the 6-digit code shown by your app</label><input id="mfaConfirmCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code"><div class="row" style="margin-top:16px"><button class="btn" id="confirmMfaBtn">Enable 2FA</button><button class="btn secondary" onclick="closeModal()">Cancel</button></div>`);document.getElementById('confirmMfaBtn').onclick=async()=>{const code=document.getElementById('mfaConfirmCode').value.trim(),enabled=await fetch(`${API}/auth/mfa/enable?code=${encodeURIComponent(code)}`,{method:'POST',headers:authHeaders()}),result=await enabled.json();showAlert(result.detail||'Could not enable 2FA',enabled.ok?'success':'error');if(enabled.ok){closeModal();loadMfaStatus();}};};
+window.disableMfa=()=>{openModal('<h2>Disable two-factor authentication</h2><div class="alert warn">This removes authenticator protection from your staff account.</div><label>Current 6-digit authenticator code</label><input id="mfaDisableCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000"><div class="row" style="margin-top:16px"><button class="btn danger" id="confirmDisableMfa">Disable 2FA</button><button class="btn secondary" onclick="closeModal()">Cancel</button></div>');document.getElementById('confirmDisableMfa').onclick=async()=>{const code=document.getElementById('mfaDisableCode').value.trim();if(!/^\d{6}$/.test(code))return showAlert('Enter the current 6-digit authenticator code.','error');const res=await fetch(`${API}/auth/mfa/disable?code=${encodeURIComponent(code)}`,{method:'POST',headers:authHeaders()}),data=await res.json();showAlert(data.detail||'Could not disable 2FA',res.ok?'success':'error');if(res.ok){closeModal();loadMfaStatus();}};};
+
+// ---- Audit log ----
+async function loadAudit() {
+  await ensureProgrammeFilters();
+  const res = await fetch(`${API}/admin/audit-log`, { headers: authHeaders() });
+  if (!res.ok) { document.getElementById("auditList").innerHTML = `<div class="empty-state">Not authorized to view the audit log.</div>`; return; }
+  let logs = await res.json();
+  const pid=document.getElementById('auditProgramFilter').value,roleFilter=document.getElementById('auditRoleFilter').value;
+  if(pid)logs=logs.filter(l=>String(l.training_program_id||'')===pid);
+  if(roleFilter)logs=logs.filter(l=>l.user_role===roleFilter);
+  const list = document.getElementById("auditList");
+  if (!logs.length) { list.innerHTML = `<div class="empty-state">No activity recorded yet.</div>`; return; }
+  list.innerHTML = `<table><thead><tr><th>Time</th><th>User</th><th>Action</th><th>Entity</th></tr></thead><tbody>
+    ${logs.map(l => `<tr>
+      <td style="font-size:12px;">${new Date(l.created_at).toLocaleString()}</td>
+      <td>${esc(l.user_email || 'system')}</td>
+      <td>${esc(l.action)}</td>
+      <td>${esc(l.entity_type || '')}${l.entity_id ? ' #' + l.entity_id : ''}</td>
+    </tr>`).join("")}
+  </tbody></table>`;
+}
+document.getElementById('auditProgramFilter').addEventListener('change',loadAudit);
+document.getElementById('auditRoleFilter').addEventListener('change',loadAudit);
+
+init();
+</script>
+</body>
+</html>

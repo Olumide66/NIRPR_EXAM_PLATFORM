@@ -331,8 +331,9 @@ General Manager signature. Upload that signature under **Governance &
 Services → Programme signatures** before downloading tags.
 The printable tag uses the standard ID-1 card size (85.60 × 53.98 mm).
 
-Users now have `surname`, `first_name`, and `other_name` columns while
-`full_name` remains for existing screens and records. Existing names were
+Users now store only `surname`, `first_name`, and `other_name` in the database.
+The application assembles a display name from those fields for existing screens
+and reports. Existing names were
 split using the last word as surname; review and correct ambiguous names via
 **Users → Edit name** before issuing tags. New candidate forms collect these
 parts separately.
