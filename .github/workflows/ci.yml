@@ -1,0 +1,50 @@
+name: Platform CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: platform-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Backend smoke tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: nirpr-exam-platform/backend
+    env:
+      # Disposable database only; never provide production credentials to CI.
+      DATABASE_URL: "sqlite+aiosqlite:///:memory:"
+      SECRET_KEY: ci-only-test-key-not-for-production-2026
+      SMTP_HOST: ""
+      SMTP_USER: ""
+      SMTP_PASSWORD: ""
+      REDIS_URL: redis://localhost:6379/15
+      APP_BASE_URL: http://testserver
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: nirpr-exam-platform/backend/requirements.txt
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Check Python syntax
+        run: python -m compileall -q .
+      - name: Run smoke tests
+        run: python -m pytest -q
