@@ -6,7 +6,7 @@ deployments should set REDIS_URL and run `celery -A infrastructure.celery_app wo
 import json
 import os
 import time
-from collections import defaultdict, deque
+from collections import OrderedDict, deque
 from celery import Celery
 
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
@@ -18,24 +18,36 @@ celery_app.conf.update(task_serializer="json", accept_content=["json"], result_s
 
 try:
     import redis.asyncio as redis
-    redis_client = redis.from_url(REDIS_URL, decode_responses=True, socket_connect_timeout=1)
+    redis_client = redis.from_url(REDIS_URL, decode_responses=True, socket_connect_timeout=0.25, socket_timeout=0.25)
 except Exception:
     redis_client = None
 
-_memory_windows = defaultdict(deque)
+_memory_windows = OrderedDict()
+_redis_retry_after = 0.0
+_MAX_RATE_KEYS = 4096
 
 
 async def rate_limit(key: str, limit: int, window_seconds: int) -> bool:
     """Return True when allowed. Uses atomic Redis counters when available."""
-    if redis_client:
+    global _redis_retry_after
+    now = time.monotonic()
+    if redis_client and now >= _redis_retry_after:
         try:
-            count = await redis_client.incr(f"rate:{key}")
-            if count == 1:
-                await redis_client.expire(f"rate:{key}", window_seconds)
+            count = await redis_client.eval(
+                "local n = redis.call('INCR', KEYS[1]); "
+                "if n == 1 then redis.call('EXPIRE', KEYS[1], ARGV[1]) end; return n",
+                1, f"rate:{key}", window_seconds)
             return count <= limit
         except Exception:
-            pass
-    now = time.monotonic(); window = _memory_windows[key]
+            _redis_retry_after = now + 5
+    if key not in _memory_windows:
+        for expired_key, (timestamps, duration) in list(_memory_windows.items()):
+            if not timestamps or timestamps[-1] <= now - duration:
+                del _memory_windows[expired_key]
+        if len(_memory_windows) >= _MAX_RATE_KEYS:
+            return False
+        _memory_windows[key] = (deque(), window_seconds)
+    window, _ = _memory_windows[key]
     while window and window[0] <= now - window_seconds:
         window.popleft()
     if len(window) >= limit:
@@ -58,4 +70,3 @@ def send_email_task(kind: str, kwargs: dict):
     import email_utils
     sender = getattr(email_utils, kind)
     return sender(**kwargs)
-

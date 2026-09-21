@@ -7,7 +7,7 @@
 <title>NIRPR RSO Examination Portal</title>
 <link rel="stylesheet" href="/static/css/style.css" />
 <script src="https://www.google.com/recaptcha/api.js?render=explicit" async defer></script>
-</head>
+<script src="/static/js/recaptcha.js"></script></head>
 <body>
 
 <div class="topbar">
@@ -90,7 +90,7 @@ if (existingToken && existingRole) location.href = localStorage.getItem("nirpr_m
 
 let lastAttemptedEmail = "";
 let recaptchaWidgetId = null;
-async function renderRecaptcha(){const config=await (await fetch(`${API}/auth/recaptcha-config`)).json();const wait=()=>{if(window.grecaptcha?.render){recaptchaWidgetId=grecaptcha.render('recaptchaWidget',{sitekey:config.site_key,theme:'light'});}else setTimeout(wait,100);};wait();}
+async function renderRecaptcha() { recaptchaWidgetId = await window.nirprRenderRecaptcha(); }
 renderRecaptcha();
 
 document.getElementById("loginForm").addEventListener("submit", async (e) => {

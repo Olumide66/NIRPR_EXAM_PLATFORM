@@ -7,7 +7,7 @@
 <title>Candidate Portal - NIRPR RSO Examination Platform</title>
 <link rel="stylesheet" href="/static/css/style.css" />
 <link rel="stylesheet" href="/static/css/candidate.css" />
-</head>
+<script src="/static/js/logout.js"></script></head>
 <body>
 
 <div class="topbar">
@@ -243,10 +243,7 @@ function showAlert(msg, type) {
   document.getElementById("alertBox").innerHTML = `<div class="alert ${type}">${msg}</div>`;
 }
 
-document.getElementById("logoutBtn").addEventListener("click", () => {
-  localStorage.clear();
-  window.location.href = "/";
-});
+document.getElementById("logoutBtn").addEventListener("click", () => window.nirprLogout("/"));
 
 document.getElementById("switchBackBtn").addEventListener("click", () => {
   const adminToken = localStorage.getItem("nirpr_admin_token");
