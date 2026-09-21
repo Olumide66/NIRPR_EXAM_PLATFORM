@@ -782,7 +782,7 @@ function renderQuestion() {
       <div id="fillgapInputs">${inputs}</div>
     `;
   } else {
-    const optionsHtml = Object.entries(q.options).map(([key, text]) => {
+    const optionsHtml = Object.entries(q.options).sort(([a], [b]) => a.localeCompare(b)).map(([key, text]) => {
       const isSel = selected.includes(key);
       return `<div class="option-row ${isSel ? 'selected' : ''}" data-option-key="${key}">
         <input type="${multi ? 'checkbox' : 'radio'}" name="opt-${q.id}" ${isSel ? 'checked' : ''}
