@@ -4,7 +4,8 @@ NIRPR RSO Examination Platform - Authentication & Authorization
 
 from datetime import datetime, timedelta
 from typing import Optional
-from jose import JWTError, jwt
+import jwt
+from jwt import InvalidTokenError
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -15,11 +16,12 @@ import secrets
 
 from database import get_db
 from models import User, UserRole, AuditLog, AuthSession
+from security_config import signing_key
 
 
 VERIFICATION_TOKEN_EXPIRE_HOURS = int(os.getenv("VERIFICATION_TOKEN_EXPIRE_HOURS", "24"))
 PASSWORD_RESET_TOKEN_EXPIRE_MINUTES = int(os.getenv("PASSWORD_RESET_TOKEN_EXPIRE_MINUTES", "60"))
-SECRET_KEY = os.getenv("SECRET_KEY", "nirpr-rso-platform-secret-key-change-in-production")
+SECRET_KEY = signing_key()
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "480"))
 
@@ -44,9 +46,9 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 
 def decode_token(token: str) -> Optional[dict]:
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options={"require": ["exp"]})
         return payload
-    except JWTError:
+    except InvalidTokenError:
         return None
 
 
@@ -71,7 +73,7 @@ async def get_current_user(
         )
 
     user_id = payload.get("sub")
-    if not user_id:
+    if not isinstance(user_id, str) or not user_id.isdecimal():
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token payload",
@@ -79,11 +81,21 @@ async def get_current_user(
         )
 
     session_id = payload.get("sid")
-    if session_id:
-        session_record = (await db.execute(select(AuthSession).where(AuthSession.id == session_id))).scalar_one_or_none()
-        if (not session_record or session_record.revoked_at or session_record.expires_at < datetime.utcnow()):
-            raise HTTPException(status_code=401, detail="Session expired or revoked")
-        session_record.last_seen_at = datetime.utcnow()
+    if not isinstance(session_id, str) or not session_id:
+        raise HTTPException(status_code=401, detail="Session required. Please sign in again.")
+    session_record = (await db.execute(select(AuthSession).where(AuthSession.id == session_id))).scalar_one_or_none()
+    impersonator_id = payload.get("impersonated_by")
+    if impersonator_id is not None and (type(impersonator_id) is not int or impersonator_id <= 0):
+        raise HTTPException(status_code=401, detail="Invalid impersonation session")
+    principal_id = impersonator_id if impersonator_id is not None else int(user_id)
+    if (not session_record or session_record.user_id != principal_id or session_record.revoked_at
+            or session_record.expires_at <= datetime.utcnow()):
+        raise HTTPException(status_code=401, detail="Session expired or revoked")
+    if impersonator_id is not None:
+        principal = (await db.execute(select(User).where(User.id == principal_id))).scalar_one_or_none()
+        if not principal or not principal.is_active or principal.must_change_password or principal.role not in (UserRole.ADMIN, UserRole.SUPER_ADMIN):
+            raise HTTPException(status_code=401, detail="Impersonating administrator is no longer authorized")
+    session_record.last_seen_at = datetime.utcnow()
 
     result = await db.execute(select(User).where(User.id == int(user_id)))
     user = result.scalar_one_or_none()
@@ -100,6 +112,10 @@ async def get_current_user(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User account is deactivated",
         )
+
+    if impersonator_id is not None and user.role != UserRole.CANDIDATE:
+        raise HTTPException(status_code=401, detail="Invalid impersonation target")
+    user.authenticated_session_id = session_id
 
     # Transient attribute (not persisted) set when this token was issued via
     # the admin "log in as candidate" feature — lets endpoints tell an
@@ -190,7 +206,6 @@ def generate_secure_token() -> str:
 
 
 def get_client_ip(request: Request) -> str:
-    x_forwarded_for = request.headers.get("X-Forwarded-For")
-    if x_forwarded_for:
-        return x_forwarded_for.split(",")[0].strip()
+    # Let the ASGI server validate its trusted proxy chain. Never trust a raw
+    # client-supplied forwarding header for authentication throttling.
     return request.client.host if request.client else "unknown"

@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Admin Console - NIRPR RSO Examination Platform</title>
 <link rel="stylesheet" href="/static/css/style.css" />
-</head>
+<script src="/static/js/logout.js"></script></head>
 <body>
 
 <div class="topbar">
@@ -263,7 +263,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')setMobileNav(false);
 window.matchMedia('(min-width:761px)').addEventListener('change',e=>{if(e.matches)setMobileNav(false);});
 document.getElementById('mainNav').addEventListener('click',e=>{const link=e.target.closest('a[data-view]');if(!link)return;setMobileNav(false);document.querySelectorAll('#mainNav .nav-menu.open').forEach(menu=>{menu.classList.remove('open');menu.querySelector('.nav-menu-trigger')?.setAttribute('aria-expanded','false');});setTimeout(()=>setMobileNav(false),50);});
 
-document.getElementById("logoutBtn").addEventListener("click", () => { localStorage.clear(); window.location.href = "/admin-login"; });
+document.getElementById("logoutBtn").addEventListener("click", () => window.nirprLogout("/admin-login"));
 
 document.getElementById("switchRoleBtn").addEventListener("click", async () => {
   openModal(`<h2 class="mt-0">Loading candidates...</h2>`);

@@ -54,6 +54,7 @@ from certificate_utils import build_certificate_pdf, certificate_number
 from name_utils import split_full_name
 from candidate_tag_utils import build_candidate_tag_pdf
 from infrastructure import rate_limit, heartbeat
+from security_config import recaptcha_settings, is_production, RequestBodyLimitMiddleware
 from reporting_utils import official_exam_report_pdf
 
 # Kept as aliases so the rest of this file (and anyone grepping for these
@@ -65,19 +66,21 @@ RESET_TOKEN_MINUTES = PASSWORD_RESET_TOKEN_EXPIRE_MINUTES
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FRONTEND_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "frontend"))
-RECAPTCHA_SITE_KEY = os.getenv("RECAPTCHA_SITE_KEY", "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI")
-RECAPTCHA_SECRET_KEY = os.getenv("RECAPTCHA_SECRET_KEY", "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe")
+RECAPTCHA_SITE_KEY, RECAPTCHA_SECRET_KEY, RECAPTCHA_ALLOWED_HOSTNAMES = recaptcha_settings()
 
 
 async def verify_recaptcha(token: str, remote_ip: str) -> bool:
-    if not token:
+    if not token or len(token) > 4096 or not RECAPTCHA_SECRET_KEY or not RECAPTCHA_ALLOWED_HOSTNAMES:
         return False
     try:
         async with httpx.AsyncClient(timeout=8.0) as client:
             response = await client.post("https://www.google.com/recaptcha/api/siteverify", data={
                 "secret": RECAPTCHA_SECRET_KEY, "response": token, "remoteip": remote_ip,
             })
-        return bool(response.json().get("success"))
+        response.raise_for_status()
+        result = response.json()
+        return (result.get("success") is True
+                and result.get("hostname", "").lower() in RECAPTCHA_ALLOWED_HOSTNAMES)
     except Exception:
         return False
 
@@ -161,6 +164,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(RequestBodyLimitMiddleware)
 
 @app.middleware("http")
 async def security_headers_and_rate_limits(request: Request, call_next):
@@ -172,7 +176,9 @@ async def security_headers_and_rate_limits(request: Request, call_next):
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
-    response.headers["Content-Security-Policy"] = "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/; frame-src blob: https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/; img-src 'self' data: blob: https://www.gstatic.com/recaptcha/; connect-src 'self' https://www.google.com/recaptcha/"
+    response.headers["Content-Security-Policy"] = "default-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/; frame-src blob: https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/; img-src 'self' data: blob: https://www.gstatic.com/recaptcha/; connect-src 'self' https://www.google.com/recaptcha/"
+    if is_production():
+        response.headers["Strict-Transport-Security"] = "max-age=31536000"
     response.headers["Cache-Control"] = "no-store" if request.url.path.startswith("/api/") else "no-cache"
     return response
 
@@ -424,6 +430,8 @@ async def captcha():
 
 @app.get("/api/auth/recaptcha-config", tags=["Auth"])
 async def recaptcha_config():
+    if not RECAPTCHA_SITE_KEY or not RECAPTCHA_SECRET_KEY or not RECAPTCHA_ALLOWED_HOSTNAMES:
+        raise HTTPException(status_code=503, detail="Human verification is not configured. Contact the administrator.")
     return {"site_key": RECAPTCHA_SITE_KEY, "provider": "google_recaptcha_v2"}
 
 
@@ -431,6 +439,8 @@ async def recaptcha_config():
 async def setup_mfa(current_user: User = Depends(require_examiner), db: AsyncSession = Depends(get_db)):
     secret = pyotp.random_base32()
     record = (await db.execute(select(StaffMFA).where(StaffMFA.user_id == current_user.id))).scalar_one_or_none()
+    if record and record.enabled:
+        raise HTTPException(status_code=409, detail="Disable existing two-factor authentication with a valid code before replacing it.")
     if record:
         record.secret, record.enabled = secret, False
     else:
@@ -484,6 +494,15 @@ async def list_sessions(current_user: User = Depends(get_current_user), db: Asyn
                              .order_by(AuthSession.last_seen_at.desc()))).scalars().all()
     return [{"id": s.id, "device": s.device_label, "ip_address": s.ip_address, "created_at": s.created_at,
              "last_seen_at": s.last_seen_at, "expires_at": s.expires_at, "revoked": bool(s.revoked_at)} for s in rows]
+
+
+@app.post("/api/auth/logout", tags=["Auth"])
+async def logout(current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    await db.execute(sa_update(AuthSession).where(
+        AuthSession.id == current_user.authenticated_session_id
+    ).values(revoked_at=datetime.utcnow()))
+    await db.commit()
+    return {"detail": "Signed out"}
 
 
 @app.delete("/api/auth/sessions/{session_id}", tags=["Auth"])
@@ -598,6 +617,7 @@ async def impersonate_candidate(
         "sub": str(target.id),
         "role": target.role.value,
         "impersonated_by": current_user.id,
+        "sid": current_user.authenticated_session_id,
     }, expires_delta=timedelta(minutes=60))
 
     await log_audit(db, "impersonation_start", user_id=current_user.id, entity_type="user", entity_id=target.id,
@@ -691,7 +711,7 @@ async def reset_password(data: schemas.ResetPasswordRequest, db: AsyncSession = 
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=400, detail="Invalid or already-used reset link.")
-    if user.reset_token_expires and user.reset_token_expires < datetime.utcnow():
+    if not user.reset_token_expires or user.reset_token_expires <= datetime.utcnow():
         raise HTTPException(status_code=400, detail="This reset link has expired. Please request a new one.")
 
     user.hashed_password = get_password_hash(data.new_password)
@@ -982,7 +1002,9 @@ async def import_questions_csv(
     if not file.filename.lower().endswith(".csv"):
         raise HTTPException(status_code=400, detail="Please upload a .csv file")
 
-    raw = await file.read()
+    raw = await file.read(5 * 1024 * 1024 + 1)
+    if len(raw) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="CSV exceeds 5 MB")
     rows, parse_errors = csv_utils.parse_questions_csv(raw)
 
     created = 0
@@ -2182,8 +2204,12 @@ async def import_users_csv(
     if not file.filename.lower().endswith(".csv"):
         raise HTTPException(status_code=400, detail="Please upload a .csv file")
 
-    raw = await file.read()
+    raw = await file.read(5 * 1024 * 1024 + 1)
+    if len(raw) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="CSV exceeds 5 MB")
     rows, parse_errors = csv_utils.parse_users_csv(raw)
+    if current_user.role != UserRole.SUPER_ADMIN and any(row['role'] == 'super_admin' for row in rows):
+        raise HTTPException(status_code=403, detail="Only a Super Admin can create Super Admin accounts.")
 
     # Preload training programs by code for candidate rows
     programs_result = await db.execute(select(TrainingProgram))
@@ -2318,6 +2344,8 @@ async def create_staff_user(
         raise HTTPException(status_code=400, detail="An account with this email already exists")
 
     role = UserRole(data.role.value)
+    if role == UserRole.SUPER_ADMIN and current_user.role != UserRole.SUPER_ADMIN:
+        raise HTTPException(status_code=403, detail="Only a Super Admin can create Super Admin accounts.")
     if role == UserRole.CANDIDATE and not data.training_program_id:
         raise HTTPException(status_code=400, detail="Select a training programme for this candidate")
     if data.training_program_id:
@@ -2376,6 +2404,8 @@ async def update_user(
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    if user.role == UserRole.SUPER_ADMIN and current_user.role != UserRole.SUPER_ADMIN:
+        raise HTTPException(status_code=403, detail="Only a Super Admin can manage Super Admin accounts.")
     changes = data.model_dump(exclude_unset=True)
     if any(key in changes for key in ("surname", "first_name", "other_name")):
         surname = (changes.get("surname", user.surname) or "").strip()
@@ -2400,6 +2430,8 @@ async def admin_reset_password(user_id: int, data: schemas.AdminPasswordReset,
     user = (await db.execute(select(User).where(User.id == user_id))).scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    if user.role == UserRole.SUPER_ADMIN and current_user.role != UserRole.SUPER_ADMIN:
+        raise HTTPException(status_code=403, detail="Only a Super Admin can manage Super Admin accounts.")
     if user_id == current_user.id:
         raise HTTPException(status_code=400, detail="Use the account password change flow for your own account")
     user.hashed_password = get_password_hash(data.new_password)
@@ -2425,6 +2457,8 @@ async def delete_user(
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    if user.role == UserRole.SUPER_ADMIN and current_user.role != UserRole.SUPER_ADMIN:
+        raise HTTPException(status_code=403, detail="Only a Super Admin can manage Super Admin accounts.")
 
     if user.role == UserRole.SUPER_ADMIN:
         count_result = await db.execute(select(func.count(User.id)).where(User.role == UserRole.SUPER_ADMIN))
@@ -2677,12 +2711,24 @@ async def upload_payment(exam_id: int, file: UploadFile = File(...), amount: Opt
     if file.content_type not in allowed: raise HTTPException(status_code=400, detail="Receipt must be PDF, PNG or JPEG")
     content = await file.read(5 * 1024 * 1024 + 1)
     if len(content) > 5 * 1024 * 1024: raise HTTPException(status_code=413, detail="Receipt exceeds 5 MB")
+    if file.content_type == "application/pdf":
+        if not content.startswith(b"%PDF-"):
+            raise HTTPException(status_code=400, detail="Receipt is not a PDF")
+    else:
+        try:
+            with Image.open(io.BytesIO(content)) as image:
+                expected = "PNG" if file.content_type == "image/png" else "JPEG"
+                if image.format != expected or image.width * image.height > 20_000_000:
+                    raise ValueError("Invalid receipt image")
+                image.verify()
+        except (UnidentifiedImageError, OSError, ValueError, Image.DecompressionBombError):
+            raise HTTPException(status_code=400, detail="Receipt image could not be read")
     suffix = {"application/pdf": ".pdf", "image/png": ".png", "image/jpeg": ".jpg"}[file.content_type]
     destination = UPLOAD_DIR / f"receipt-{current_user.id}-{exam_id}-{secrets.token_hex(8)}{suffix}"
-    destination.write_bytes(content)
     receipt = (await db.execute(select(PaymentReceipt).where(PaymentReceipt.user_id == current_user.id,
                                                               PaymentReceipt.exam_id == exam_id))).scalar_one_or_none()
     if receipt and receipt.status == "approved": raise HTTPException(status_code=409, detail="This payment is already approved")
+    destination.write_bytes(content)
     if receipt:
         receipt.file_name, receipt.stored_path, receipt.content_type = file.filename or destination.name, str(destination), file.content_type
         receipt.amount, receipt.reference, receipt.status, receipt.uploaded_at = amount, reference, "pending", datetime.utcnow()
@@ -2794,10 +2840,11 @@ async def view_payment_receipt(receipt_id: int, current_user: User = Depends(req
     stored = Path(receipt.stored_path).resolve(); upload_root = UPLOAD_DIR.resolve()
     if upload_root not in stored.parents or not stored.is_file():
         raise HTTPException(status_code=404, detail="The uploaded receipt file is unavailable")
-    safe_name = Path(receipt.file_name).name.replace('"', '')
+    # Download untrusted receipts rather than execute active PDF content in our origin.
     return FileResponse(stored, media_type=receipt.content_type or "application/octet-stream",
-                        headers={"Content-Disposition": f'inline; filename="{safe_name}"',
-                                 "X-Content-Type-Options": "nosniff"})
+                        filename=Path(receipt.file_name).name,
+                        content_disposition_type="attachment",
+                        headers={"X-Content-Type-Options": "nosniff"})
 
 
 @app.patch("/api/admin/payments/{receipt_id}", tags=["Payments"])
