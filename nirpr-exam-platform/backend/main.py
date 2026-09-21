@@ -53,6 +53,7 @@ import email_utils
 from certificate_utils import build_certificate_pdf, certificate_number
 from name_utils import split_full_name
 from candidate_tag_utils import build_candidate_tag_pdf
+from candidate_number_utils import candidate_number as format_candidate_number
 from infrastructure import rate_limit, heartbeat
 from security_config import recaptcha_settings, is_production, RequestBodyLimitMiddleware
 from reporting_utils import official_exam_report_pdf
@@ -100,6 +101,16 @@ def build_user_detail(user: User, candidate_profile: Optional[CandidateProfile] 
 
 async def allocate_candidate_identity(db: AsyncSession, user_id: int) -> CandidateIdentity:
     """Allocate monotonic public numbers independently of SQLite's reusable user IDs."""
+    # Sessions disable autoflush; newly registered/imported profiles must be
+    # visible before looking up their programme.
+    await db.flush()
+    course_code = (await db.execute(
+        select(TrainingProgram.code).join(
+            CandidateProfile, CandidateProfile.training_program_id == TrainingProgram.id
+        ).where(CandidateProfile.user_id == user_id)
+    )).scalar_one_or_none()
+    if not course_code:
+        raise ValueError("A candidate must have a training programme before allocating a number")
     rows = (await db.execute(select(CandidateIdentity.candidate_number,
                                     CandidateIdentity.examination_number))).all()
     highest = 0
@@ -110,7 +121,7 @@ async def allocate_candidate_identity(db: AsyncSession, user_id: int) -> Candida
             except (TypeError, ValueError):
                 continue
     sequence = max(user_id, highest + 1)
-    return CandidateIdentity(user_id=user_id, candidate_number=f"NIRPR-CAN-{sequence:06d}",
+    return CandidateIdentity(user_id=user_id, candidate_number=format_candidate_number(course_code, sequence),
                              examination_number=f"NIRPR-EXM-{sequence:06d}")
 
 
